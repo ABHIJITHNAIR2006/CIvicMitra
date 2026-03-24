@@ -1,0 +1,9 @@
+{
+  "name": "CivicMitra",
+  "description": "A Sustainable Habit Gamification Platform that turns eco-friendly habits into a rewarding experience with challenges, streaks, and community impact.",
+  "requestFramePermissions": [
+    "camera",
+    "microphone",
+    "geolocation"
+  ]
+}

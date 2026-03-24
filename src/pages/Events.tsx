@@ -1,0 +1,129 @@
+import { useEffect, useState } from "react";
+import { collection, getDocs, query, orderBy } from "firebase/firestore";
+import { db, auth } from "../firebase";
+import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
+import DashboardLayout from "../layouts/DashboardLayout";
+import { motion } from "motion/react";
+import { Calendar, MapPin, Users, ArrowRight, Star } from "lucide-react";
+import { cn } from "../lib/utils";
+
+export default function Events() {
+  const [events, setEvents] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const q = query(collection(db, "events"), orderBy("startDate", "asc"));
+        const snap = await getDocs(q).catch(e => handleFirestoreError(e, OperationType.LIST, "events"));
+        if (snap) {
+          setEvents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+        }
+      } catch (error) {
+        console.error("Error fetching events:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchEvents();
+  }, []);
+
+  return (
+    <DashboardLayout>
+      <div className="space-y-8">
+        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
+          <h1 className="text-4xl">Community Events</h1>
+          <div className="flex gap-2">
+            <button className="px-6 py-2 bg-primary text-white rounded-xl font-bold hover:bg-primary-light transition-colors">
+              Host an Event
+            </button>
+          </div>
+        </div>
+
+        {/* Featured Event */}
+        <div className="relative h-96 rounded-3xl overflow-hidden card-shadow group cursor-pointer">
+          <img 
+            src="https://picsum.photos/seed/cleanup/1200/600" 
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+            referrerPolicy="no-referrer"
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 md:p-12">
+            <div className="flex items-center gap-2 mb-4">
+              <span className="bg-accent text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">Featured</span>
+              <span className="bg-white/20 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">Clean-up Drive</span>
+            </div>
+            <h2 className="text-4xl md:text-5xl text-white mb-4 max-w-2xl">Juhu Beach Clean-up Drive 2026</h2>
+            <div className="flex flex-wrap gap-6 text-white/80 mb-8">
+              <div className="flex items-center gap-2">
+                <Calendar size={20} />
+                <span>March 28, 2026 • 07:00 AM</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <MapPin size={20} />
+                <span>Juhu Beach, Mumbai</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Users size={20} />
+                <span>124 Joined</span>
+              </div>
+            </div>
+            <button className="w-fit px-8 py-4 bg-white text-primary rounded-xl font-bold hover:bg-gray-100 transition-colors flex items-center gap-2">
+              Register Now <ArrowRight size={20} />
+            </button>
+          </div>
+        </div>
+
+        {/* Events Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+          {loading ? (
+            [1, 2, 3, 4].map(i => <div key={i} className="h-64 bg-gray-200 rounded-3xl animate-pulse" />)
+          ) : events.length > 0 ? (
+            events.map(event => (
+              <EventCard key={event.id} event={event} />
+            ))
+          ) : (
+            <div className="col-span-full py-20 text-center bg-white rounded-3xl card-shadow">
+              <p className="text-text-secondary">No upcoming events found. Check back later!</p>
+            </div>
+          )}
+        </div>
+      </div>
+    </DashboardLayout>
+  );
+}
+
+function EventCard({ event }: { event: any }) {
+  return (
+    <motion.div 
+      whileHover={{ y: -4 }}
+      className="bg-white rounded-3xl card-shadow overflow-hidden flex flex-col"
+    >
+      <div className="h-48 relative">
+        <img src={event.bannerImageUrl || `https://picsum.photos/seed/${event.id}/800/400`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
+        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-primary">
+          {event.eventType}
+        </div>
+        <div className="absolute top-4 right-4 bg-primary text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
+          <Star size={12} /> +{event.bonusPoints} pts
+        </div>
+      </div>
+      <div className="p-6 flex-1 flex flex-col">
+        <h3 className="text-2xl mb-2">{event.title}</h3>
+        <p className="text-text-secondary text-sm line-clamp-2 mb-6 flex-1">{event.description}</p>
+        <div className="space-y-3 mb-6">
+          <div className="flex items-center gap-2 text-sm text-text-secondary">
+            <Calendar size={16} className="text-primary" />
+            <span>{new Date(event.startDate).toLocaleDateString()}</span>
+          </div>
+          <div className="flex items-center gap-2 text-sm text-text-secondary">
+            <MapPin size={16} className="text-primary" />
+            <span>{event.location?.venueName || 'Online'}</span>
+          </div>
+        </div>
+        <button className="w-full py-3 bg-gray-50 text-primary rounded-xl font-bold hover:bg-primary hover:text-white transition-all">
+          View Details
+        </button>
+      </div>
+    </motion.div>
+  );
+}
