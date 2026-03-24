@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, memo } from "react";
 import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
@@ -31,6 +31,12 @@ export default function Leaderboard() {
     fetchLeaderboard();
   }, [activeTab]);
 
+  const podiumUsers = useMemo(() => {
+    if (users.length < 3) return [];
+    // Return in order: [2nd, 1st, 3rd] for layout
+    return [users[1], users[0], users[2]];
+  }, [users]);
+
   return (
     <DashboardLayout>
       <div className="space-y-8">
@@ -58,11 +64,11 @@ export default function Leaderboard() {
         </div>
 
         {/* Podium */}
-        {!loading && users.length >= 3 && (
+        {!loading && podiumUsers.length >= 3 && (
           <div className="flex items-end justify-center gap-4 md:gap-12 py-12">
-            <PodiumItem user={users[1]} rank={2} height="h-48" />
-            <PodiumItem user={users[0]} rank={1} height="h-64" />
-            <PodiumItem user={users[2]} rank={3} height="h-40" />
+            <PodiumItem user={podiumUsers[0]} rank={2} height="h-48" />
+            <PodiumItem user={podiumUsers[1]} rank={1} height="h-64" />
+            <PodiumItem user={podiumUsers[2]} rank={3} height="h-40" />
           </div>
         )}
 
@@ -121,7 +127,7 @@ export default function Leaderboard() {
   );
 }
 
-function PodiumItem({ user, rank, height }: { user: UserProfile, rank: number, height: string }) {
+const PodiumItem = memo(({ user, rank, height }: { user: UserProfile, rank: number, height: string }) => {
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="relative">
@@ -132,6 +138,7 @@ function PodiumItem({ user, rank, height }: { user: UserProfile, rank: number, h
           <img 
             src={user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`} 
             className="w-full h-full rounded-full object-cover" 
+            loading="lazy"
           />
         </div>
         <div className={cn(
@@ -158,4 +165,4 @@ function PodiumItem({ user, rank, height }: { user: UserProfile, rank: number, h
       </motion.div>
     </div>
   );
-}
+});

@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import DashboardLayout from "../layouts/DashboardLayout";
-import { collection, query, getDocs, where, doc, updateDoc, getDoc, increment } from "firebase/firestore";
+import { collection, query, getDocs, where, doc, updateDoc, getDoc, increment, writeBatch } from "firebase/firestore";
+import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "../firebase";
 import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
-import { UserProfile, Completion, VerificationStatus, Role, Challenge } from "../types";
+import { UserProfile, Completion, VerificationStatus, Role, Challenge, Category, Difficulty } from "../types";
 import { motion } from "motion/react";
-import { Users, Zap, AlertCircle, CheckCircle2, XCircle, ShieldCheck, Eye } from "lucide-react";
+import { Users, Zap, AlertCircle, CheckCircle2, XCircle, ShieldCheck, Eye, Database, Plus } from "lucide-react";
 import { cn } from "../lib/utils";
 import { toast } from "react-hot-toast";
 
@@ -20,32 +21,10 @@ export default function AdminDashboard() {
     pendingReviews: 0
   });
   const [loading, setLoading] = useState(true);
+  const [seeding, setSeeding] = useState(false);
   const [selectedProof, setSelectedProof] = useState<string | null>(null);
 
   useEffect(() => {
-    const checkAdmin = async () => {
-      if (!auth.currentUser) return;
-      
-      // Check hardcoded admin email first
-      if (auth.currentUser.email === "arcadeabhi6@gmail.com" && auth.currentUser.emailVerified) {
-        setIsAdmin(true);
-        fetchAdminData();
-        return;
-      }
-
-      try {
-        const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid)).catch(e => handleFirestoreError(e, OperationType.GET, `users/${auth.currentUser?.uid}`));
-        if (userDoc && userDoc.exists() && userDoc.data().role === Role.ADMIN) {
-          setIsAdmin(true);
-          fetchAdminData();
-        } else {
-          setLoading(false);
-        }
-      } catch (error) {
-        setLoading(false);
-      }
-    };
-
     const fetchAdminData = async () => {
       try {
         // Fetch Pending Completions
@@ -92,7 +71,34 @@ export default function AdminDashboard() {
       }
     };
 
-    checkAdmin();
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        setIsAdmin(false);
+        setLoading(false);
+        return;
+      }
+      
+      // Check hardcoded admin email first
+      if (user.email === "arcadeabhi6@gmail.com") {
+        setIsAdmin(true);
+        fetchAdminData();
+        return;
+      }
+
+      try {
+        const userDoc = await getDoc(doc(db, "users", user.uid)).catch(e => handleFirestoreError(e, OperationType.GET, `users/${user.uid}`));
+        if (userDoc && userDoc.exists() && userDoc.data().role === Role.ADMIN) {
+          setIsAdmin(true);
+          fetchAdminData();
+        } else {
+          setLoading(false);
+        }
+      } catch (error) {
+        setLoading(false);
+      }
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const handleVerify = async (completion: Completion, status: VerificationStatus) => {
@@ -127,6 +133,102 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleSeedData = async () => {
+    setSeeding(true);
+    try {
+      const challenges = [
+        {
+          challengeId: "reusable-bottle-day",
+          title: "Reusable Bottle Day",
+          description: "Carry and use a reusable water bottle all day to reduce single-use plastic waste.",
+          shortDescription: "Carry and use a reusable water bottle all day.",
+          category: Category.WATER,
+          difficulty: Difficulty.EASY,
+          points: 10,
+          bonusPointsStreak: 5,
+          iconEmoji: "💧",
+          bannerImageUrl: "https://picsum.photos/seed/bottle/800/400",
+          proofInstructions: "Upload a photo of your reusable bottle in hand or on your desk.",
+          isDaily: true,
+          isActive: true
+        },
+        {
+          challengeId: "short-shower",
+          title: "Short Shower Challenge",
+          description: "Take a shower under 5 minutes to conserve water.",
+          shortDescription: "Take a shower under 5 minutes.",
+          category: Category.WATER,
+          difficulty: Difficulty.MEDIUM,
+          points: 15,
+          bonusPointsStreak: 5,
+          iconEmoji: "🚿",
+          bannerImageUrl: "https://picsum.photos/seed/shower/800/400",
+          proofInstructions: "Upload a photo of a timer showing <5:00 next to running water.",
+          isDaily: true,
+          isActive: true
+        },
+        {
+          challengeId: "lights-out",
+          title: "Lights Out Hour",
+          description: "Turn off all non-essential lights for 1 hour to save energy.",
+          shortDescription: "Turn off all non-essential lights for 1 hour.",
+          category: Category.ENERGY,
+          difficulty: Difficulty.EASY,
+          points: 10,
+          bonusPointsStreak: 5,
+          iconEmoji: "💡",
+          bannerImageUrl: "https://picsum.photos/seed/lights/800/400",
+          proofInstructions: "Upload a photo of your dark room or only essential light.",
+          isDaily: true,
+          isActive: true
+        },
+        {
+          challengeId: "walk-it",
+          title: "Walk It",
+          description: "Walk instead of taking a vehicle for any trip under 1 km.",
+          shortDescription: "Walk instead of taking a vehicle for short trips.",
+          category: Category.TRANSPORT,
+          difficulty: Difficulty.EASY,
+          points: 15,
+          bonusPointsStreak: 5,
+          iconEmoji: "🚶",
+          bannerImageUrl: "https://picsum.photos/seed/walk/800/400",
+          proofInstructions: "Upload a walking selfie or a Google Maps screenshot showing your walk.",
+          isDaily: true,
+          isActive: true
+        },
+        {
+          challengeId: "no-plastic-bag",
+          title: "No Plastic Bag",
+          description: "Carry a cloth or reusable bag for all your shopping today.",
+          shortDescription: "Carry a cloth/reusable bag for all shopping.",
+          category: Category.WASTE,
+          difficulty: Difficulty.EASY,
+          points: 10,
+          bonusPointsStreak: 5,
+          iconEmoji: "🛍️",
+          bannerImageUrl: "https://picsum.photos/seed/bag/800/400",
+          proofInstructions: "Upload a photo of your cloth bag with your purchases.",
+          isDaily: true,
+          isActive: true
+        }
+      ];
+
+      const batch = writeBatch(db);
+      challenges.forEach(c => {
+        const ref = doc(db, "challenges", c.challengeId);
+        batch.set(ref, c);
+      });
+      await batch.commit();
+      toast.success("Challenges seeded successfully!");
+      window.location.reload();
+    } catch (error) {
+      toast.error("Failed to seed data");
+    } finally {
+      setSeeding(false);
+    }
+  };
+
   if (loading) return (
     <div className="min-h-screen flex items-center justify-center bg-background">
       <div className="w-12 h-12 border-4 border-primary border-t-transparent rounded-full animate-spin" />
@@ -147,11 +249,21 @@ export default function AdminDashboard() {
   return (
     <DashboardLayout>
       <div className="space-y-8">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
-            <ShieldCheck size={32} />
+        <div className="flex items-center justify-between gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+              <ShieldCheck size={32} />
+            </div>
+            <h1 className="text-4xl">Admin Control Panel</h1>
           </div>
-          <h1 className="text-4xl">Admin Control Panel</h1>
+          <button 
+            onClick={handleSeedData}
+            disabled={seeding}
+            className="flex items-center gap-2 px-6 py-3 bg-accent text-white rounded-xl font-bold hover:bg-accent/90 transition-all disabled:opacity-50 shadow-lg"
+          >
+            <Database size={20} />
+            {seeding ? "Seeding..." : "Seed Challenges"}
+          </button>
         </div>
 
         {/* Stats Grid */}

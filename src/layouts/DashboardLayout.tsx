@@ -17,6 +17,7 @@ import {
   ShieldCheck
 } from "lucide-react";
 import { useEffect, useState } from "react";
+import { onAuthStateChanged } from "firebase/auth";
 import { motion, AnimatePresence } from "motion/react";
 import { cn } from "../lib/utils";
 import { doc, getDoc } from "firebase/firestore";
@@ -40,24 +41,28 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const navigate = useNavigate();
 
   useEffect(() => {
-    const checkAdmin = async () => {
-      if (!auth.currentUser) return;
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        setIsAdmin(false);
+        return;
+      }
       
-      if (auth.currentUser.email === "arcadeabhi6@gmail.com") {
+      if (user.email === "arcadeabhi6@gmail.com") {
         setIsAdmin(true);
         return;
       }
 
       try {
-        const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+        const userDoc = await getDoc(doc(db, "users", user.uid));
         if (userDoc.exists() && userDoc.data().role === Role.ADMIN) {
           setIsAdmin(true);
         }
       } catch (error) {
         console.error("Error checking admin status:", error);
       }
-    };
-    checkAdmin();
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const navItems = isAdmin 

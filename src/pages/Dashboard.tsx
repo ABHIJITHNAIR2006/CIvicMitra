@@ -1,11 +1,12 @@
-import { useEffect, useState } from "react";
-import { collection, query, getDocs, limit, orderBy, where, doc, getDoc } from "firebase/firestore";
+import { useEffect, useState, useMemo, memo } from "react";
+import { collection, query, getDocs, limit, orderBy, where, doc, getDoc, setDoc, writeBatch } from "firebase/firestore";
 import { db, auth } from "../firebase";
+import { Category, Difficulty, Challenge, UserProfile, Completion, VerificationStatus, Role } from "../types";
+import { toast } from "react-hot-toast";
 import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
 import DashboardLayout from "../layouts/DashboardLayout";
-import { Challenge, UserProfile, Completion, VerificationStatus } from "../types";
 import { motion, AnimatePresence } from "motion/react";
-import { Trophy, Zap, Target, ArrowRight, Leaf, Users, Calendar } from "lucide-react";
+import { Trophy, Zap, Target, ArrowRight, Leaf, Users, Calendar, Database } from "lucide-react";
 import { Link } from "react-router-dom";
 import ChallengeCard from "../components/ChallengeCard";
 import ChallengeModal from "../components/ChallengeModal";
@@ -17,31 +18,151 @@ export default function Dashboard() {
   const [recentActivity, setRecentActivity] = useState<Completion[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [seeding, setSeeding] = useState(false);
+
+  const handleSeedData = async () => {
+    setSeeding(true);
+    try {
+      const challengesData = [
+        {
+          challengeId: "reusable-bottle-day",
+          title: "Reusable Bottle Day",
+          description: "Carry and use a reusable water bottle all day to reduce single-use plastic waste.",
+          shortDescription: "Carry and use a reusable water bottle all day.",
+          category: Category.WATER,
+          difficulty: Difficulty.EASY,
+          points: 10,
+          bonusPointsStreak: 5,
+          iconEmoji: "💧",
+          bannerImageUrl: "https://picsum.photos/seed/bottle/800/400",
+          proofInstructions: "Upload a photo of your reusable bottle in hand or on your desk.",
+          isDaily: true,
+          isActive: true
+        },
+        {
+          challengeId: "short-shower",
+          title: "Short Shower Challenge",
+          description: "Take a shower under 5 minutes to conserve water.",
+          shortDescription: "Take a shower under 5 minutes.",
+          category: Category.WATER,
+          difficulty: Difficulty.MEDIUM,
+          points: 15,
+          bonusPointsStreak: 5,
+          iconEmoji: "🚿",
+          bannerImageUrl: "https://picsum.photos/seed/shower/800/400",
+          proofInstructions: "Upload a photo of a timer showing <5:00 next to running water.",
+          isDaily: true,
+          isActive: true
+        },
+        {
+          challengeId: "lights-out",
+          title: "Lights Out Hour",
+          description: "Turn off all non-essential lights for 1 hour to save energy.",
+          shortDescription: "Turn off all non-essential lights for 1 hour.",
+          category: Category.ENERGY,
+          difficulty: Difficulty.EASY,
+          points: 10,
+          bonusPointsStreak: 5,
+          iconEmoji: "💡",
+          bannerImageUrl: "https://picsum.photos/seed/lights/800/400",
+          proofInstructions: "Upload a photo of your dark room or only essential light.",
+          isDaily: true,
+          isActive: true
+        },
+        {
+          challengeId: "walk-it",
+          title: "Walk It",
+          description: "Walk instead of taking a vehicle for any trip under 1 km.",
+          shortDescription: "Walk instead of taking a vehicle for short trips.",
+          category: Category.TRANSPORT,
+          difficulty: Difficulty.EASY,
+          points: 15,
+          bonusPointsStreak: 5,
+          iconEmoji: "🚶",
+          bannerImageUrl: "https://picsum.photos/seed/walk/800/400",
+          proofInstructions: "Upload a walking selfie or a Google Maps screenshot showing your walk.",
+          isDaily: true,
+          isActive: true
+        },
+        {
+          challengeId: "no-plastic-bag",
+          title: "No Plastic Bag",
+          description: "Carry a cloth or reusable bag for all your shopping today.",
+          shortDescription: "Carry a cloth/reusable bag for all shopping.",
+          category: Category.WASTE,
+          difficulty: Difficulty.EASY,
+          points: 10,
+          bonusPointsStreak: 5,
+          iconEmoji: "🛍️",
+          bannerImageUrl: "https://picsum.photos/seed/bag/800/400",
+          proofInstructions: "Upload a photo of your cloth bag with your purchases.",
+          isDaily: true,
+          isActive: true
+        }
+      ];
+
+      const batch = writeBatch(db);
+      challengesData.forEach(c => {
+        const ref = doc(db, "challenges", c.challengeId);
+        batch.set(ref, c);
+      });
+      await batch.commit();
+      toast.success("Challenges seeded successfully!");
+      window.location.reload();
+    } catch (error) {
+      toast.error("Failed to seed data");
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   useEffect(() => {
     const fetchData = async () => {
       if (!auth.currentUser) return;
 
       try {
-        // Fetch User Profile
-        const userSnap = await getDoc(doc(db, "users", auth.currentUser.uid)).catch(e => handleFirestoreError(e, OperationType.GET, `users/${auth.currentUser?.uid}`));
+        // Parallel fetching for better performance
+        const [userSnap, challengesSnap, activitySnap] = await Promise.all([
+          getDoc(doc(db, "users", auth.currentUser.uid)).catch(e => handleFirestoreError(e, OperationType.GET, `users/${auth.currentUser?.uid}`)),
+          getDocs(query(collection(db, "challenges"), where("isDaily", "==", true), limit(3))).catch(e => handleFirestoreError(e, OperationType.LIST, "challenges")),
+          getDocs(query(
+            collection(db, "completions"), 
+            where("userId", "==", auth.currentUser.uid),
+            orderBy("submittedAt", "desc"),
+            limit(5)
+          )).catch(e => handleFirestoreError(e, OperationType.LIST, "completions"))
+        ]);
+
         if (userSnap && userSnap.exists()) {
-          setProfile(userSnap.data() as UserProfile);
+          const userData = userSnap.data() as UserProfile;
+          setProfile(userData);
+
+          // Admin Check
+          if (auth.currentUser.email === "arcadeabhi6@gmail.com" || userData.role === Role.ADMIN) {
+            setIsAdmin(true);
+          }
+
+          // Sync to users_public if missing (background task)
+          getDoc(doc(db, "users_public", auth.currentUser.uid)).then(async (publicSnap) => {
+            if (!publicSnap.exists()) {
+              await setDoc(doc(db, "users_public", auth.currentUser.uid), {
+                uid: auth.currentUser.uid,
+                username: userData.username,
+                fullName: userData.fullName,
+                avatarUrl: userData.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.username}`,
+                totalPoints: userData.totalPoints || 0,
+                currentStreak: userData.currentStreak || 0,
+                level: userData.level || 1
+              }).catch(e => handleFirestoreError(e, OperationType.CREATE, `users_public/${auth.currentUser?.uid}`));
+            }
+          });
         }
 
-        // Fetch Daily Challenges
-        const challengesSnap = await getDocs(query(collection(db, "challenges"), where("isDaily", "==", true), limit(3))).catch(e => handleFirestoreError(e, OperationType.LIST, "challenges"));
         if (challengesSnap) {
           setDailyChallenges(challengesSnap.docs.map(d => d.data() as Challenge));
         }
 
-        // Fetch Recent Activity
-        const activitySnap = await getDocs(query(
-          collection(db, "completions"), 
-          where("userId", "==", auth.currentUser.uid),
-          orderBy("submittedAt", "desc"),
-          limit(5)
-        )).catch(e => handleFirestoreError(e, OperationType.LIST, "completions"));
         if (activitySnap) {
           setRecentActivity(activitySnap.docs.map(d => ({ id: d.id, ...d.data() } as Completion)));
         }
@@ -73,6 +194,16 @@ export default function Dashboard() {
           <div>
             <h1 className="text-4xl mb-2">Welcome back, {profile?.fullName?.split(' ')[0] || profile?.username || 'Eco-Warrior'}!</h1>
             <p className="text-text-secondary text-lg">You've saved <span className="text-primary font-bold">12.4kg</span> of CO2 this week. Keep it up!</p>
+            {isAdmin && dailyChallenges.length === 0 && (
+              <button 
+                onClick={handleSeedData}
+                disabled={seeding}
+                className="mt-4 flex items-center gap-2 px-6 py-2 bg-accent text-white rounded-xl font-bold hover:bg-accent/90 transition-all shadow-lg disabled:opacity-50"
+              >
+                <Database size={18} />
+                {seeding ? "Seeding..." : "Seed Initial Challenges"}
+              </button>
+            )}
           </div>
           <div className="flex gap-4">
             <StatCard icon={<Zap className="text-accent" />} label="Streak" value={`${profile?.currentStreak || 0} Days`} />
@@ -155,7 +286,7 @@ export default function Dashboard() {
   );
 }
 
-function StatCard({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | number }) {
+const StatCard = memo(({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | number }) => {
   return (
     <div className="bg-white px-6 py-4 rounded-2xl card-shadow flex items-center gap-4 min-w-[140px]">
       <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center">
@@ -167,9 +298,9 @@ function StatCard({ icon, label, value }: { icon: React.ReactNode, label: string
       </div>
     </div>
   );
-}
+});
 
-function ActivityItem({ activity }: { activity: Completion }) {
+const ActivityItem = memo(({ activity }: { activity: Completion }) => {
   return (
     <div className="p-6 flex items-center justify-between hover:bg-gray-50 transition-colors">
       <div className="flex items-center gap-4">
@@ -197,4 +328,4 @@ function ActivityItem({ activity }: { activity: Completion }) {
       </div>
     </div>
   );
-}
+});
