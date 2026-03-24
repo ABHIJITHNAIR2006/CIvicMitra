@@ -22,7 +22,14 @@ export default function LoginPage() {
       toast.success("Welcome back!");
       navigate("/dashboard");
     } catch (error: any) {
-      toast.error(error.message || "Failed to login");
+      console.error("Login Error:", error);
+      let message = "Failed to login";
+      if (error.code === 'auth/operation-not-allowed') {
+        message = "Email/Password sign-in is not enabled in your Firebase Console. Please enable it in Authentication > Sign-in method.";
+      } else {
+        message = error.message || message;
+      }
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -35,7 +42,29 @@ export default function LoginPage() {
       toast.success("Welcome back!");
       navigate("/dashboard");
     } catch (error: any) {
-      toast.error(error.message || "Failed to sign in with Google");
+      console.error("Google Sign In Error:", error);
+      let message = "Failed to sign in with Google";
+      
+      // Handle Firebase Auth errors
+      if (error.code === 'auth/popup-blocked') {
+        message = "Popup blocked by browser. Please allow popups for this site.";
+      } else if (error.code === 'auth/popup-closed-by-user') {
+        message = "Sign-in popup closed before completion.";
+      } else if (error.code === 'auth/unauthorized-domain') {
+        message = "This domain is not authorized for Google Sign-In. Please check Firebase Console.";
+      } else if (error.code === 'auth/operation-not-allowed') {
+        message = "Google Sign-In is not enabled in your Firebase Console. Please enable it in Authentication > Sign-in method.";
+      } else {
+        // Handle custom Firestore errors (JSON strings)
+        try {
+          const parsed = JSON.parse(error.message);
+          if (parsed.error) message = `Profile Error: ${parsed.error}`;
+        } catch {
+          message = error.message || message;
+        }
+      }
+      
+      toast.error(message);
     } finally {
       setLoading(false);
     }
