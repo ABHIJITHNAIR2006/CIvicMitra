@@ -44,16 +44,19 @@ export default function LandingPage() {
           <p className="text-xl md:text-2xl text-text-secondary mb-10 max-w-2xl mx-auto">
             Turn sustainable living into a game. Complete challenges, earn points, and save the world one habit at a time.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
             <Link
               to="/register"
-              className="px-8 py-4 bg-primary text-white rounded-full text-lg font-bold hover:bg-primary-light transition-colors shadow-lg"
+              className="px-10 py-4 bg-primary text-white rounded-full text-lg font-bold hover:bg-primary-light transition-all hover:scale-105 shadow-lg shadow-primary/20"
             >
               Start Your Eco Journey
             </Link>
-            <button className="px-8 py-4 bg-white text-primary border-2 border-primary rounded-full text-lg font-bold hover:bg-primary/5 transition-colors">
-              See How It Works
-            </button>
+            <Link
+              to="/login"
+              className="px-10 py-4 bg-white text-primary border-2 border-primary rounded-full text-lg font-bold hover:bg-primary/5 transition-all hover:scale-105"
+            >
+              Sign In
+            </Link>
           </div>
         </motion.div>
       </section>
