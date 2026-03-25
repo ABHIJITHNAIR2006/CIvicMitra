@@ -108,6 +108,31 @@
         "createdAt": { "type": "string", "format": "date-time" }
       },
       "required": ["userId", "title", "message", "isRead", "createdAt"]
+    },
+    "QuizQuestion": {
+      "title": "QuizQuestion",
+      "description": "Daily quiz question",
+      "type": "object",
+      "properties": {
+        "question": { "type": "string" },
+        "options": { "type": "array", "items": { "type": "string" } },
+        "correctAnswer": { "type": "integer" },
+        "difficulty": { "type": "string", "enum": ["easy", "medium", "hard"] }
+      },
+      "required": ["question", "options", "correctAnswer", "difficulty"]
+    },
+    "QuizAttempt": {
+      "title": "QuizAttempt",
+      "description": "User quiz attempt",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "date": { "type": "string", "format": "date" },
+        "score": { "type": "integer" },
+        "answers": { "type": "array", "items": { "type": "integer" } },
+        "submittedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "date", "score", "submittedAt"]
     }
   },
   "firestore": {
@@ -138,6 +163,14 @@
     "/notifications/{notificationId}": {
       "schema": "Notification",
       "description": "User notifications"
+    },
+    "/quiz_questions/{questionId}": {
+      "schema": "QuizQuestion",
+      "description": "Quiz questions pool"
+    },
+    "/quiz_attempts/{attemptId}": {
+      "schema": "QuizAttempt",
+      "description": "User quiz attempts"
     }
   }
 }

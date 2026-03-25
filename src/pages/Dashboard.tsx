@@ -10,6 +10,7 @@ import { Trophy, Zap, Target, ArrowRight, Leaf, Users, Calendar, Database } from
 import { Link } from "react-router-dom";
 import ChallengeCard from "../components/ChallengeCard";
 import ChallengeModal from "../components/ChallengeModal";
+import DailyQuizCard from "../components/DailyQuizCard";
 import { cn } from "../lib/utils";
 
 export default function Dashboard() {
@@ -121,25 +122,39 @@ export default function Dashboard() {
     const fetchData = async () => {
       if (!auth.currentUser) return;
 
+      // Immediate Admin Check based on email
+      if (auth.currentUser.email === "arcadeabhi6@gmail.com") {
+        setIsAdmin(true);
+      }
+
       try {
         // Parallel fetching for better performance
         const [userSnap, challengesSnap, activitySnap] = await Promise.all([
-          getDoc(doc(db, "users", auth.currentUser.uid)).catch(e => handleFirestoreError(e, OperationType.GET, `users/${auth.currentUser?.uid}`)),
-          getDocs(query(collection(db, "challenges"), where("isDaily", "==", true), limit(3))).catch(e => handleFirestoreError(e, OperationType.LIST, "challenges")),
+          getDoc(doc(db, "users", auth.currentUser.uid)).catch(e => {
+            console.error("User profile fetch failed:", e);
+            return null; // Don't throw, just return null
+          }),
+          getDocs(query(collection(db, "challenges"), where("isDaily", "==", true), limit(3))).catch(e => {
+            console.error("Challenges fetch failed:", e);
+            return null;
+          }),
           getDocs(query(
             collection(db, "completions"), 
             where("userId", "==", auth.currentUser.uid),
             orderBy("submittedAt", "desc"),
             limit(5)
-          )).catch(e => handleFirestoreError(e, OperationType.LIST, "completions"))
+          )).catch(e => {
+            console.error("Activity fetch failed:", e);
+            return null;
+          })
         ]);
 
         if (userSnap && userSnap.exists()) {
           const userData = userSnap.data() as UserProfile;
           setProfile(userData);
 
-          // Admin Check
-          if (auth.currentUser.email === "arcadeabhi6@gmail.com" || userData.role === Role.ADMIN) {
+          // Admin Check from profile role
+          if (userData.role === Role.ADMIN) {
             setIsAdmin(true);
           }
 
@@ -154,7 +169,7 @@ export default function Dashboard() {
                 totalPoints: userData.totalPoints || 0,
                 currentStreak: userData.currentStreak || 0,
                 level: userData.level || 1
-              }).catch(e => handleFirestoreError(e, OperationType.CREATE, `users_public/${auth.currentUser?.uid}`));
+              }).catch(e => console.error("Public profile sync failed:", e));
             }
           });
         }
@@ -168,6 +183,7 @@ export default function Dashboard() {
         }
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
+        toast.error("Some data failed to load. Please refresh.");
       } finally {
         setLoading(false);
       }
@@ -222,15 +238,34 @@ export default function Dashboard() {
               View All <ArrowRight size={16} />
             </Link>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {dailyChallenges.map((challenge) => (
-              <ChallengeCard 
-                key={challenge.challengeId} 
-                challenge={challenge} 
-                onClick={() => setSelectedChallenge(challenge)}
-              />
-            ))}
-          </div>
+          
+          {dailyChallenges.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {dailyChallenges.map((challenge) => (
+                <ChallengeCard 
+                  key={challenge.challengeId} 
+                  challenge={challenge} 
+                  onClick={() => setSelectedChallenge(challenge)}
+                />
+              ))}
+            </div>
+          ) : (
+            <div className="bg-white rounded-3xl p-12 text-center card-shadow">
+              <Leaf className="mx-auto text-gray-200 mb-4" size={48} />
+              <h3 className="text-xl mb-2">No daily challenges available</h3>
+              <p className="text-text-secondary mb-6">Check back later or explore all challenges.</p>
+              {isAdmin && (
+                <button 
+                  onClick={handleSeedData}
+                  disabled={seeding}
+                  className="flex items-center gap-2 px-8 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary-light transition-all mx-auto shadow-lg disabled:opacity-50"
+                >
+                  <Database size={20} />
+                  {seeding ? "Seeding..." : "Seed Initial Challenges"}
+                </button>
+              )}
+            </div>
+          )}
         </section>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -258,6 +293,12 @@ export default function Dashboard() {
 
           {/* Community Stats */}
           <div className="space-y-6">
+            <h2 className="text-2xl mb-6 flex items-center gap-2">
+              <Zap className="text-primary" />
+              Daily Bonus
+            </h2>
+            <DailyQuizCard />
+
             <h2 className="text-2xl mb-6 flex items-center gap-2">
               <Users className="text-primary" />
               Community

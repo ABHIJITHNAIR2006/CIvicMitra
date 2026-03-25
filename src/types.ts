@@ -27,6 +27,23 @@ export enum VerificationStatus {
   MANUAL_REVIEW = "MANUAL_REVIEW",
 }
 
+export interface QuizQuestion {
+  id?: string;
+  question: string;
+  options: string[];
+  correctAnswer: number;
+  difficulty: "easy" | "medium" | "hard";
+}
+
+export interface QuizAttempt {
+  id?: string;
+  userId: string;
+  date: string; // YYYY-MM-DD
+  score: number;
+  answers: number[];
+  submittedAt: string;
+}
+
 export interface UserProfile {
   uid: string;
   username: string;

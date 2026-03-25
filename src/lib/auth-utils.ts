@@ -11,9 +11,9 @@ export const signInWithGoogle = async () => {
 
   try {
     // Check if user profile exists
-    const userDoc = await getDoc(doc(db, "users", user.uid));
+    const userDoc = await getDoc(doc(db, "users", user.uid)).catch(e => handleFirestoreError(e, OperationType.GET, `users/${user.uid}`));
     
-    if (!userDoc.exists()) {
+    if (userDoc && !userDoc.exists()) {
       // Create user profile if it doesn't exist
       const isAdmin = user.email === "arcadeabhi6@gmail.com";
       const username = user.email?.split('@')[0] || `user_${user.uid.slice(0, 5)}`;

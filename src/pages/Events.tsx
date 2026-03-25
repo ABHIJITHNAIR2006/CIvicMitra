@@ -1,42 +1,86 @@
-import { useEffect, useState } from "react";
-import { collection, getDocs, query, orderBy } from "firebase/firestore";
-import { db, auth } from "../firebase";
+import { useEffect, useState, useCallback } from "react";
+import { collection, getDocs, query, orderBy, deleteDoc, doc } from "firebase/firestore";
+import { db } from "../firebase";
 import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
 import DashboardLayout from "../layouts/DashboardLayout";
-import { motion } from "motion/react";
-import { Calendar, MapPin, Users, ArrowRight, Star } from "lucide-react";
+import { motion, AnimatePresence } from "motion/react";
+import { Calendar, MapPin, Users, ArrowRight, Star, Plus, Edit2, Trash2 } from "lucide-react";
 import { cn } from "../lib/utils";
+import { useAuth } from "../contexts/AuthContext";
+import EventModal from "../components/EventModal";
+import { toast } from "react-hot-toast";
 
 export default function Events() {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [editingEvent, setEditingEvent] = useState<any>(null);
+  const { isAdmin } = useAuth();
+
+  const fetchEvents = useCallback(async () => {
+    try {
+      const q = query(collection(db, "events"), orderBy("startDate", "asc"));
+      const snap = await getDocs(q).catch(e => handleFirestoreError(e, OperationType.LIST, "events"));
+      if (snap) {
+        setEvents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
+      }
+    } catch (error) {
+      console.error("Error fetching events:", error);
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
   useEffect(() => {
-    const fetchEvents = async () => {
-      try {
-        const q = query(collection(db, "events"), orderBy("startDate", "asc"));
-        const snap = await getDocs(q).catch(e => handleFirestoreError(e, OperationType.LIST, "events"));
-        if (snap) {
-          setEvents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
-        }
-      } catch (error) {
-        console.error("Error fetching events:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchEvents();
-  }, []);
+  }, [fetchEvents]);
+
+  const handleEdit = (event: any) => {
+    setEditingEvent(event);
+    setIsModalOpen(true);
+  };
+
+  const handleDelete = async (eventId: string) => {
+    if (!window.confirm("Are you sure you want to delete this event?")) return;
+    
+    try {
+      await deleteDoc(doc(db, "events", eventId)).catch(e => handleFirestoreError(e, OperationType.DELETE, `events/${eventId}`));
+      toast.success("Event deleted successfully!");
+      fetchEvents();
+    } catch (error) {
+      console.error("Error deleting event:", error);
+      toast.error("Failed to delete event");
+    }
+  };
+
+  const handleCreate = () => {
+    setEditingEvent(null);
+    setIsModalOpen(true);
+  };
 
   return (
     <DashboardLayout>
       <div className="space-y-8">
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <h1 className="text-4xl">Community Events</h1>
+          <div>
+            <h1 className="text-4xl mb-2">Community Events</h1>
+            <p className="text-text-secondary">Join local eco-initiatives and earn bonus points.</p>
+          </div>
           <div className="flex gap-2">
-            <button className="px-6 py-2 bg-primary text-white rounded-xl font-bold hover:bg-primary-light transition-colors">
-              Host an Event
-            </button>
+            {isAdmin && (
+              <button 
+                onClick={handleCreate}
+                className="px-6 py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary-light transition-all flex items-center gap-2 shadow-lg shadow-primary/20"
+              >
+                <Plus size={20} />
+                Create Event
+              </button>
+            )}
+            {!isAdmin && (
+              <button className="px-6 py-2 bg-white text-primary border-2 border-primary rounded-xl font-bold hover:bg-primary/5 transition-colors">
+                Host an Event
+              </button>
+            )}
           </div>
         </div>
 
@@ -79,7 +123,13 @@ export default function Events() {
             [1, 2, 3, 4].map(i => <div key={i} className="h-64 bg-gray-200 rounded-3xl animate-pulse" />)
           ) : events.length > 0 ? (
             events.map(event => (
-              <EventCard key={event.id} event={event} />
+              <EventCard 
+                key={event.id} 
+                event={event} 
+                isAdmin={isAdmin}
+                onEdit={() => handleEdit(event)}
+                onDelete={() => handleDelete(event.id)}
+              />
             ))
           ) : (
             <div className="col-span-full py-20 text-center bg-white rounded-3xl card-shadow">
@@ -87,16 +137,26 @@ export default function Events() {
             </div>
           )}
         </div>
+
+        <AnimatePresence>
+          {isModalOpen && (
+            <EventModal 
+              event={editingEvent} 
+              onClose={() => setIsModalOpen(false)} 
+              onSuccess={fetchEvents}
+            />
+          )}
+        </AnimatePresence>
       </div>
     </DashboardLayout>
   );
 }
 
-function EventCard({ event }: { event: any }) {
+function EventCard({ event, isAdmin, onEdit, onDelete }: { event: any, isAdmin: boolean, onEdit: () => void, onDelete: () => void }) {
   return (
     <motion.div 
       whileHover={{ y: -4 }}
-      className="bg-white rounded-3xl card-shadow overflow-hidden flex flex-col"
+      className="bg-white rounded-3xl card-shadow overflow-hidden flex flex-col group"
     >
       <div className="h-48 relative">
         <img src={event.bannerImageUrl || `https://picsum.photos/seed/${event.id}/800/400`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -106,6 +166,23 @@ function EventCard({ event }: { event: any }) {
         <div className="absolute top-4 right-4 bg-primary text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
           <Star size={12} /> +{event.bonusPoints} pts
         </div>
+        
+        {isAdmin && (
+          <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+            <button 
+              onClick={(e) => { e.stopPropagation(); onEdit(); }}
+              className="p-2 bg-white text-primary rounded-lg shadow-lg hover:bg-primary hover:text-white transition-all"
+            >
+              <Edit2 size={16} />
+            </button>
+            <button 
+              onClick={(e) => { e.stopPropagation(); onDelete(); }}
+              className="p-2 bg-white text-red-600 rounded-lg shadow-lg hover:bg-red-600 hover:text-white transition-all"
+            >
+              <Trash2 size={16} />
+            </button>
+          </div>
+        )}
       </div>
       <div className="p-6 flex-1 flex flex-col">
         <h3 className="text-2xl mb-2">{event.title}</h3>
@@ -113,7 +190,7 @@ function EventCard({ event }: { event: any }) {
         <div className="space-y-3 mb-6">
           <div className="flex items-center gap-2 text-sm text-text-secondary">
             <Calendar size={16} className="text-primary" />
-            <span>{new Date(event.startDate).toLocaleDateString()}</span>
+            <span>{new Date(event.startDate).toLocaleDateString()} at {new Date(event.startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
           </div>
           <div className="flex items-center gap-2 text-sm text-text-secondary">
             <MapPin size={16} className="text-primary" />

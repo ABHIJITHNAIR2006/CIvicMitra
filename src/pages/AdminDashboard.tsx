@@ -6,8 +6,9 @@ import { db, auth } from "../firebase";
 import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
 import { UserProfile, Completion, VerificationStatus, Role, Challenge, Category, Difficulty } from "../types";
 import { motion } from "motion/react";
-import { Users, Zap, AlertCircle, CheckCircle2, XCircle, ShieldCheck, Eye, Database, Plus } from "lucide-react";
+import { Users, Zap, AlertCircle, CheckCircle2, XCircle, ShieldCheck, Eye, Database, Plus, Brain, Trophy } from "lucide-react";
 import { cn } from "../lib/utils";
+import { Link } from "react-router-dom";
 import { toast } from "react-hot-toast";
 
 export default function AdminDashboard() {
@@ -271,6 +272,39 @@ export default function AdminDashboard() {
           <AdminStatCard icon={<Users />} label="Total Users" value={stats.totalUsers} color="bg-blue-500" />
           <AdminStatCard icon={<Zap />} label="Completions" value={stats.totalCompletions} color="bg-green-500" />
           <AdminStatCard icon={<AlertCircle />} label="Pending Reviews" value={stats.pendingReviews} color="bg-orange-500" />
+        </div>
+
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Link to="/admin/quiz" className="bg-white p-8 rounded-[2.5rem] card-shadow flex items-center justify-between group hover:bg-primary transition-all">
+            <div className="flex items-center gap-6">
+              <div className="w-16 h-16 bg-primary/10 rounded-[1.5rem] flex items-center justify-center text-primary group-hover:bg-white/20 group-hover:text-white transition-all">
+                <Brain size={32} />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold group-hover:text-white transition-all">Quiz Manager</h3>
+                <p className="text-text-secondary group-hover:text-white/70 transition-all">Manage daily quiz questions and pool.</p>
+              </div>
+            </div>
+            <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-white/20 group-hover:text-white transition-all">
+              <Plus size={24} />
+            </div>
+          </Link>
+
+          <Link to="/admin/challenges" className="bg-white p-8 rounded-[2.5rem] card-shadow flex items-center justify-between group hover:bg-accent transition-all">
+            <div className="flex items-center gap-6">
+              <div className="w-16 h-16 bg-accent/10 rounded-[1.5rem] flex items-center justify-center text-accent group-hover:bg-white/20 group-hover:text-white transition-all">
+                <Trophy size={32} />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold group-hover:text-white transition-all">Challenge Manager</h3>
+                <p className="text-text-secondary group-hover:text-white/70 transition-all">Create and edit eco-challenges.</p>
+              </div>
+            </div>
+            <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-white/20 group-hover:text-white transition-all">
+              <Plus size={24} />
+            </div>
+          </Link>
         </div>
 
         {/* Pending Verifications */}

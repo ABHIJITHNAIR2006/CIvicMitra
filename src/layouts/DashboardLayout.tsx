@@ -53,8 +53,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
 
       try {
-        const userDoc = await getDoc(doc(db, "users", user.uid));
-        if (userDoc.exists() && userDoc.data().role === Role.ADMIN) {
+        const userDoc = await getDoc(doc(db, "users", user.uid)).catch(e => {
+          console.error("Admin status check failed:", e);
+          return null;
+        });
+        if (userDoc && userDoc.exists() && userDoc.data().role === Role.ADMIN) {
           setIsAdmin(true);
         }
       } catch (error) {

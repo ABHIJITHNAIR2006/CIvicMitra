@@ -29,8 +29,22 @@ export interface FirestoreErrorInfo {
 }
 
 export function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null) {
+  const errorMessage = error instanceof Error ? error.message : String(error);
+  
+  // Special handling for the "client is offline" error which is usually a config issue
+  if (errorMessage.includes('the client is offline')) {
+    const configError = "Firestore connection failed (client is offline). This is likely due to an incorrect Firebase configuration (Project ID, API Key, or Database ID). Please verify your environment variables and firebase-applet-config.json.";
+    console.error(configError);
+    throw new Error(JSON.stringify({
+      error: configError,
+      originalError: errorMessage,
+      operationType,
+      path
+    }));
+  }
+
   const errInfo: FirestoreErrorInfo = {
-    error: error instanceof Error ? error.message : String(error),
+    error: errorMessage,
     authInfo: {
       userId: auth.currentUser?.uid,
       email: auth.currentUser?.email,

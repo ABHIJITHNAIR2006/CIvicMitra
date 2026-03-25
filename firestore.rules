@@ -40,7 +40,11 @@ service cloud.firestore {
       return isAuthenticated() && 
         ((exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
           get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN') ||
-         (request.auth.token.email == "arcadeabhi6@gmail.com"));
+         (request.auth.token.email == "arcadeabhi6@gmail.com" && request.auth.token.email_verified == true));
+    }
+
+    match /connection_test/{docId} {
+      allow read: if true;
     }
 
     function isValidEmail(email) {
@@ -82,6 +86,22 @@ service cloud.firestore {
              (!('submittedAt' in data) || isValidDateString(data.submittedAt));
     }
 
+    function isValidChallenge(data) {
+      return hasRequiredFields(['challengeId', 'title', 'description', 'category', 'difficulty', 'points']) &&
+             data.challengeId is string && data.challengeId.size() > 0 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 100 &&
+             data.description is string && data.description.size() > 0 && data.description.size() <= 2000 &&
+             data.category in ['WATER', 'ENERGY', 'TRANSPORT', 'WASTE', 'FOOD', 'COMMUNITY', 'NATURE'] &&
+             data.difficulty in ['EASY', 'MEDIUM', 'HARD'] &&
+             data.points is int && data.points >= 0 &&
+             (!('shortDescription' in data) || (data.shortDescription is string && data.shortDescription.size() <= 200)) &&
+             (!('iconEmoji' in data) || (data.iconEmoji is string && data.iconEmoji.size() <= 10)) &&
+             (!('bannerImageUrl' in data) || isValidUrl(data.bannerImageUrl)) &&
+             (!('proofInstructions' in data) || (data.proofInstructions is string && data.proofInstructions.size() <= 1000)) &&
+             (!('isDaily' in data) || data.isDaily is bool) &&
+             (!('isActive' in data) || data.isActive is bool);
+    }
+
     // ===============================================================
     // Rules
     // ===============================================================
@@ -115,7 +135,8 @@ service cloud.firestore {
 
     match /challenges/{challengeId} {
       allow read: if isAuthenticated();
-      allow write: if isAdmin();
+      allow create, update: if isAdmin() && isValidChallenge(request.resource.data);
+      allow delete: if isAdmin();
     }
 
     match /completions/{completionId} {
@@ -130,6 +151,20 @@ service cloud.firestore {
     match /events/{eventId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
+    }
+
+    match /quiz_questions/{questionId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+
+    match /quiz_attempts/{attemptId} {
+      allow read: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid &&
+                       request.resource.data.score >= 0 && 
+                       request.resource.data.score <= 50;
+      allow update: if isAdmin();
     }
 
     match /notifications/{notificationId} {

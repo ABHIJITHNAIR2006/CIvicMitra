@@ -1,9 +1,16 @@
 import { GoogleGenAI } from "@google/genai";
 
-const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+// Use process.env.GEMINI_API_KEY as per guidelines
+const apiKey = process.env.GEMINI_API_KEY || "";
 
 export async function verifyEcoProof(imageUrl: string, challengeTitle: string, instructions: string) {
+  if (!apiKey) {
+    console.error("VITE_GEMINI_API_KEY is not set. AI verification disabled.");
+    return { verified: false, score: 0, reason: "Verification service not configured" };
+  }
+
   try {
+    const ai = new GoogleGenAI({ apiKey });
     const response = await ai.models.generateContent({
       model: "gemini-3-flash-preview",
       contents: [
