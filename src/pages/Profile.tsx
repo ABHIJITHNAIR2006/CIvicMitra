@@ -89,7 +89,7 @@ export default function Profile() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard icon={<Star className="text-primary" />} label="Total Points" value={profile?.totalPoints || 0} />
+          <StatCard icon={<Star className="text-primary" />} label="Total Points" value={profile?.points || 0} />
           <StatCard icon={<Flame className="text-accent" />} label="Current Streak" value={profile?.currentStreak || 0} />
           <StatCard icon={<Award className="text-primary-light" />} label="Badges" value={badges.length} />
           <StatCard icon={<Grid className="text-gray-400" />} label="Level" value={profile?.level || 1} />

@@ -54,6 +54,7 @@ export interface UserProfile {
   city?: string;
   country?: string;
   totalPoints: number;
+  points: number;
   currentStreak: number;
   longestStreak: number;
   level: number;

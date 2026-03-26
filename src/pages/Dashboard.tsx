@@ -157,21 +157,6 @@ export default function Dashboard() {
           if (userData.role === Role.ADMIN) {
             setIsAdmin(true);
           }
-
-          // Sync to users_public if missing (background task)
-          getDoc(doc(db, "users_public", auth.currentUser.uid)).then(async (publicSnap) => {
-            if (!publicSnap.exists()) {
-              await setDoc(doc(db, "users_public", auth.currentUser.uid), {
-                uid: auth.currentUser.uid,
-                username: userData.username,
-                fullName: userData.fullName,
-                avatarUrl: userData.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${userData.username}`,
-                totalPoints: userData.totalPoints || 0,
-                currentStreak: userData.currentStreak || 0,
-                level: userData.level || 1
-              }).catch(e => console.error("Public profile sync failed:", e));
-            }
-          });
         }
 
         if (challengesSnap) {
@@ -223,7 +208,7 @@ export default function Dashboard() {
           </div>
           <div className="flex gap-4">
             <StatCard icon={<Zap className="text-accent" />} label="Streak" value={`${profile?.currentStreak || 0} Days`} />
-            <StatCard icon={<Trophy className="text-yellow-500" />} label="Points" value={profile?.totalPoints || 0} />
+            <StatCard icon={<Trophy className="text-yellow-500" />} label="Points" value={profile?.points || 0} />
           </div>
         </div>
 

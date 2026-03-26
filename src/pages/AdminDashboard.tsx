@@ -41,7 +41,7 @@ export default function AdminDashboard() {
 
           const uMap: Record<string, any> = {};
           for (const uid of userIds) {
-            const uDoc = await getDoc(doc(db, "users_public", uid));
+            const uDoc = await getDoc(doc(db, "users", uid));
             if (uDoc.exists()) uMap[uid] = uDoc.data();
           }
           setUsersMap(uMap);
@@ -55,7 +55,7 @@ export default function AdminDashboard() {
           setChallengesMap(cMap);
         }
 
-        const usersSnap = await getDocs(collection(db, "users_public")).catch(e => handleFirestoreError(e, OperationType.LIST, "users_public"));
+        const usersSnap = await getDocs(collection(db, "users")).catch(e => handleFirestoreError(e, OperationType.LIST, "users"));
         const compsSnap = await getDocs(collection(db, "completions")).catch(e => handleFirestoreError(e, OperationType.LIST, "completions"));
 
         if (usersSnap && compsSnap && snap) {
@@ -114,17 +114,13 @@ export default function AdminDashboard() {
         const challenge = challengesMap[completion.challengeId];
         const points = challenge?.points || 10;
         const userRef = doc(db, "users", completion.userId);
-        const publicUserRef = doc(db, "users_public", completion.userId);
         
         const updateData = {
           totalPoints: increment(points),
           currentStreak: increment(1)
         };
 
-        await Promise.all([
-          updateDoc(userRef, updateData),
-          updateDoc(publicUserRef, updateData)
-        ]).catch(e => handleFirestoreError(e, OperationType.UPDATE, `users/${completion.userId}`));
+        await updateDoc(userRef, updateData).catch(e => handleFirestoreError(e, OperationType.UPDATE, `users/${completion.userId}`));
       }
 
       setPendingCompletions(prev => prev.filter(c => c.id !== completion.id));

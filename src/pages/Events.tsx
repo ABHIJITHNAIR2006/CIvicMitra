@@ -76,11 +76,6 @@ export default function Events() {
                 Create Event
               </button>
             )}
-            {!isAdmin && (
-              <button className="px-6 py-2 bg-white text-primary border-2 border-primary rounded-xl font-bold hover:bg-primary/5 transition-colors">
-                Host an Event
-              </button>
-            )}
           </div>
         </div>
 

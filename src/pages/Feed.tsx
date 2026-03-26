@@ -29,7 +29,7 @@ export default function Feed() {
         // Use cached user data if available
         let userData = userCache[userId];
         if (!userData) {
-          const userSnap = await getDoc(doc(db, "users_public", userId));
+          const userSnap = await getDoc(doc(db, "users", userId));
           userData = userSnap.exists() ? userSnap.data() : null;
           if (userData) userCache[userId] = userData;
         }

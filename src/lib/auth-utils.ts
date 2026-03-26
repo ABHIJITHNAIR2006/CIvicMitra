@@ -28,6 +28,7 @@ export const signInWithGoogle = async () => {
         avatarUrl: avatarUrl,
         city: "Unknown",
         country: "Unknown",
+        points: 0,
         totalPoints: 0,
         currentStreak: 0,
         longestStreak: 0,
@@ -38,17 +39,6 @@ export const signInWithGoogle = async () => {
       };
 
       await setDoc(doc(db, "users", user.uid), userData).catch(e => handleFirestoreError(e, OperationType.CREATE, `users/${user.uid}`));
-
-      // Create public profile
-      await setDoc(doc(db, "users_public", user.uid), {
-        uid: user.uid,
-        username: username,
-        fullName: fullName,
-        avatarUrl: avatarUrl,
-        totalPoints: 0,
-        currentStreak: 0,
-        level: 1
-      }).catch(e => handleFirestoreError(e, OperationType.CREATE, `users_public/${user.uid}`));
     }
   } catch (error) {
     console.error("Error during profile sync:", error);

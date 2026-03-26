@@ -37,6 +37,7 @@ export default function RegisterPage() {
         fullName: formData.fullName,
         city: formData.city,
         country: formData.country,
+        points: 0,
         totalPoints: 0,
         currentStreak: 0,
         longestStreak: 0,
@@ -47,17 +48,6 @@ export default function RegisterPage() {
       };
 
       await setDoc(doc(db, "users", user.uid), userProfile).catch(e => handleFirestoreError(e, OperationType.CREATE, `users/${user.uid}`));
-
-      // Create public profile
-      await setDoc(doc(db, "users_public", user.uid), {
-        uid: user.uid,
-        username: formData.username,
-        fullName: formData.fullName,
-        avatarUrl: `https://api.dicebear.com/7.x/avataaars/svg?seed=${formData.username}`,
-        totalPoints: 0,
-        currentStreak: 0,
-        level: 1
-      }).catch(e => handleFirestoreError(e, OperationType.CREATE, `users_public/${user.uid}`));
 
       toast.success("Account created successfully!");
       navigate("/dashboard");

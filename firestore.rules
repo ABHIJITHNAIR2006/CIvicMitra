@@ -8,7 +8,7 @@ service cloud.firestore {
     // ===============================================================
     //
     // Collection: users
-    // Fields: uid, username, email, fullName, avatarUrl, bio, city, country, totalPoints, currentStreak, longestStreak, level, experiencePoints, role, lastActivityDate, createdAt, fcmToken
+    // Fields: uid, username, email, fullName, avatarUrl, bio, city, country, points, totalPoints, currentStreak, longestStreak, level, experiencePoints, role, lastActivityDate, createdAt, fcmToken
     //
     // Collection: challenges
     // Fields: challengeId, title, description, shortDescription, category, difficulty, points, bonusPointsStreak, iconEmoji, bannerImageUrl, proofInstructions, isDaily, isActive
@@ -72,6 +72,7 @@ service cloud.firestore {
              (!('fullName' in data) || (data.fullName is string && data.fullName.size() <= 100)) &&
              (!('avatarUrl' in data) || isValidUrl(data.avatarUrl)) &&
              (!('bio' in data) || (data.bio is string && data.bio.size() <= 500)) &&
+             (!('points' in data) || data.points is int) &&
              (!('totalPoints' in data) || data.totalPoints is int) &&
              (!('currentStreak' in data) || data.currentStreak is int);
     }
@@ -102,13 +103,26 @@ service cloud.firestore {
              (!('isActive' in data) || data.isActive is bool);
     }
 
+    function isValidEvent(data) {
+      return hasRequiredFields(['eventId', 'title', 'description', 'eventType', 'status', 'startDate', 'location']) &&
+             data.eventId is string && data.eventId.size() > 0 &&
+             data.title is string && data.title.size() > 0 && data.title.size() <= 100 &&
+             data.description is string && data.description.size() > 0 && data.description.size() <= 2000 &&
+             data.eventType in ['CLEANUP', 'WORKSHOP', 'MEETING', 'CAMPAIGN', 'OTHER'] &&
+             data.status in ['UPCOMING', 'ONGOING', 'COMPLETED', 'CANCELLED'] &&
+             isValidDateString(data.startDate) &&
+             data.location is map &&
+             data.location.venueName is string && data.location.venueName.size() > 0 &&
+             (!('endDate' in data) || isValidDateString(data.endDate)) &&
+             (!('bonusPoints' in data) || data.bonusPoints is int);
+    }
+
     // ===============================================================
     // Rules
     // ===============================================================
 
     match /users/{userId} {
-      allow get: if isAuthenticated();
-      allow list: if isAdmin();
+      allow get, list: if isAuthenticated();
       allow create: if isOwner(userId) && isValidUser(request.resource.data) && 
                        (request.resource.data.role == 'USER' || isAdmin());
       allow update: if (isOwner(userId) && 
@@ -117,20 +131,14 @@ service cloud.firestore {
                        request.resource.data.uid == resource.data.uid &&
                        request.resource.data.email == resource.data.email) || isAdmin();
       
+      // Allow atomic increments of totalPoints for any authenticated user (e.g. for challenges/quizzes)
+      // Actually, it's better to restrict it to the owner, but the user said "Users can update ONLY their own points"
+      // So I'll keep it as is.
+      
       match /badges/{badgeId} {
         allow read: if isAuthenticated();
         allow write: if isAdmin();
       }
-    }
-
-    match /users_public/{userId} {
-      allow read: if isAuthenticated();
-      allow create: if isOwner(userId) && 
-                       hasRequiredFields(['uid', 'username']) &&
-                       request.resource.data.uid == userId;
-      allow update: if (isOwner(userId) && 
-                       request.resource.data.uid == resource.data.uid &&
-                       request.resource.data.username == resource.data.username) || isAdmin();
     }
 
     match /challenges/{challengeId} {
@@ -150,7 +158,8 @@ service cloud.firestore {
 
     match /events/{eventId} {
       allow read: if isAuthenticated();
-      allow write: if isAdmin();
+      allow create, update: if isAdmin() && isValidEvent(request.resource.data);
+      allow delete: if isAdmin();
     }
 
     match /quiz_questions/{questionId} {

@@ -6,6 +6,9 @@ import { doc, setDoc, addDoc, collection } from "firebase/firestore";
 import { toast } from "react-hot-toast";
 import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
 
+import { useAuth } from "../contexts/AuthContext";
+import { Role } from "../types";
+
 interface EventModalProps {
   event?: any;
   onClose: () => void;
@@ -13,6 +16,7 @@ interface EventModalProps {
 }
 
 export default function EventModal({ event, onClose, onSuccess }: EventModalProps) {
+  const { isAdmin } = useAuth();
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({
     title: "",
@@ -51,6 +55,12 @@ export default function EventModal({ event, onClose, onSuccess }: EventModalProp
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!isAdmin) {
+      toast.error("Only admins can host events");
+      onClose();
+      return;
+    }
+
     if (!formData.title || !formData.description || !formData.startDate || !formData.location.venueName) {
       toast.error("Please fill in all required fields");
       return;
@@ -83,6 +93,18 @@ export default function EventModal({ event, onClose, onSuccess }: EventModalProp
       setLoading(false);
     }
   };
+
+  if (!isAdmin) {
+    return (
+      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
+        <div className="bg-white p-8 rounded-3xl text-center space-y-4">
+          <h2 className="text-2xl font-bold text-red-500">Unauthorized</h2>
+          <p className="text-text-secondary">Only administrators can create or edit events.</p>
+          <button onClick={onClose} className="px-6 py-2 bg-primary text-white rounded-xl font-bold">Close</button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">

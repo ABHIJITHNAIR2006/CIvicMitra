@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo, memo } from "react";
-import { collection, query, orderBy, limit, getDocs } from "firebase/firestore";
+import { collection, query, orderBy, limit, onSnapshot } from "firebase/firestore";
 import { db, auth } from "../firebase";
-import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { UserProfile } from "../types";
 import { motion } from "motion/react";
@@ -14,21 +13,23 @@ export default function Leaderboard() {
   const [activeTab, setActiveTab] = useState("ALL_TIME");
 
   useEffect(() => {
-    const fetchLeaderboard = async () => {
-      setLoading(true);
-      try {
-        const q = query(collection(db, "users_public"), orderBy("totalPoints", "desc"), limit(50));
-        const snap = await getDocs(q).catch(e => handleFirestoreError(e, OperationType.LIST, "users_public"));
-        if (snap) {
-          setUsers(snap.docs.map(d => d.data() as UserProfile));
-        }
-      } catch (error) {
-        console.error("Error fetching leaderboard:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchLeaderboard();
+    setLoading(true);
+    // Real-time listener on users collection
+    const q = query(collection(db, "users"), orderBy("points", "desc"), limit(50));
+    
+    const unsubscribe = onSnapshot(q, (snap) => {
+      const leaderboardData = snap.docs.map(d => ({
+        uid: d.id,
+        ...d.data()
+      } as UserProfile));
+      setUsers(leaderboardData);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching leaderboard:", error);
+      setLoading(false);
+    });
+
+    return () => unsubscribe();
   }, [activeTab]);
 
   const podiumUsers = useMemo(() => {
@@ -115,7 +116,7 @@ export default function Leaderboard() {
                     {user.currentStreak}
                   </div>
                   <div className="col-span-2 text-right font-bold text-primary">
-                    {user.totalPoints.toLocaleString()}
+                    {user.points.toLocaleString()}
                   </div>
                 </motion.div>
               ))}
@@ -150,7 +151,7 @@ const PodiumItem = memo(({ user, rank, height }: { user: UserProfile, rank: numb
       </div>
       <div className="text-center">
         <p className="font-bold text-sm md:text-base">{user.fullName}</p>
-        <p className="text-primary font-bold">{user.totalPoints} pts</p>
+        <p className="text-primary font-bold">{user.points} pts</p>
       </div>
       <motion.div 
         initial={{ height: 0 }}

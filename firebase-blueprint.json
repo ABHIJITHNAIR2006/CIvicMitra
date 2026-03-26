@@ -13,6 +13,7 @@
         "bio": { "type": "string" },
         "city": { "type": "string" },
         "country": { "type": "string" },
+        "points": { "type": "integer" },
         "totalPoints": { "type": "integer" },
         "currentStreak": { "type": "integer" },
         "longestStreak": { "type": "integer" },
@@ -139,10 +140,6 @@
     "/users/{userId}": {
       "schema": "User",
       "description": "User profiles"
-    },
-    "/users_public/{userId}": {
-      "schema": "User",
-      "description": "Public user profiles for leaderboard and feed"
     },
     "/challenges/{challengeId}": {
       "schema": "Challenge",

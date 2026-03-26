@@ -66,23 +66,15 @@ export default function ChallengeModal({ challenge, onClose }: ChallengeModalPro
       if (result.verified) {
         // 4. Update User Points & Streak
         const userRef = doc(db, "users", auth.currentUser.uid);
-        const publicUserRef = doc(db, "users_public", auth.currentUser.uid);
         
         const updateData = {
+          points: increment(challenge.points),
           totalPoints: increment(challenge.points),
           currentStreak: increment(1),
           lastActivityDate: new Date().toISOString().split('T')[0]
         };
 
-        const publicUpdateData = {
-          totalPoints: increment(challenge.points),
-          currentStreak: increment(1)
-        };
-
-        await Promise.all([
-          updateDoc(userRef, updateData),
-          updateDoc(publicUserRef, publicUpdateData)
-        ]).catch(e => handleFirestoreError(e, OperationType.UPDATE, `users/${auth.currentUser?.uid}`));
+        await updateDoc(userRef, updateData).catch(e => handleFirestoreError(e, OperationType.UPDATE, `users/${auth.currentUser?.uid}`));
         
         setStatus("SUCCESS");
         toast.success(`Verified! +${challenge.points} points earned.`);
