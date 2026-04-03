@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { collection, getDocs, addDoc, doc, updateDoc, increment, query, where, getDoc } from "firebase/firestore";
+import { collection, getDocs, addDoc, doc, updateDoc, increment, query, where, getDoc, limit } from "firebase/firestore";
 import { db } from "../firebase";
 import { QuizQuestion, QuizAttempt } from "../types";
 import { useAuth } from "../contexts/AuthContext";
@@ -93,23 +93,41 @@ export default function QuizModal({ isOpen, onClose, onComplete }: QuizModalProp
     if (!user) return;
     setIsSubmitting(true);
     
+    // Ensure exactly 5 questions are counted, each 10 points
     let score = 0;
-    questions.forEach((q, i) => {
+    const numQuestions = 5;
+    
+    questions.slice(0, numQuestions).forEach((q, i) => {
       if (selectedAnswers[i] === q.correctAnswer) {
         score += 10;
       }
     });
 
     const today = new Date().toISOString().split('T')[0];
-    const attempt: QuizAttempt = {
-      userId: user.uid,
-      date: today,
-      score,
-      answers: selectedAnswers,
-      submittedAt: new Date().toISOString()
-    };
-
+    
     try {
+      // Double check if user already attempted today before saving
+      const q = query(
+        collection(db, "quiz_attempts"),
+        where("userId", "==", user.uid),
+        where("date", "==", today),
+        limit(1)
+      );
+      const snap = await getDocs(q);
+      if (!snap.empty) {
+        toast.error("You have already completed today's quiz!");
+        onClose();
+        return;
+      }
+
+      const attempt: QuizAttempt = {
+        userId: user.uid,
+        date: today,
+        score,
+        answers: selectedAnswers,
+        submittedAt: new Date().toISOString()
+      };
+
       // 1. Save attempt
       await addDoc(collection(db, "quiz_attempts"), attempt).catch(e => handleFirestoreError(e, OperationType.CREATE, "quiz_attempts"));
       
@@ -120,7 +138,7 @@ export default function QuizModal({ isOpen, onClose, onComplete }: QuizModalProp
         totalPoints: increment(score)
       }).catch(e => handleFirestoreError(e, OperationType.UPDATE, `users/${user.uid}`));
 
-      setResult({ score, total: questions.length * 10 });
+      setResult({ score, total: numQuestions * 10 });
       toast.success(`Quiz completed! You earned ${score} points.`);
       onComplete();
     } catch (error) {

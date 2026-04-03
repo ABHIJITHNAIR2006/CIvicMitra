@@ -108,13 +108,13 @@ service cloud.firestore {
              data.eventId is string && data.eventId.size() > 0 &&
              data.title is string && data.title.size() > 0 && data.title.size() <= 100 &&
              data.description is string && data.description.size() > 0 && data.description.size() <= 2000 &&
-             data.eventType in ['CLEANUP', 'WORKSHOP', 'MEETING', 'CAMPAIGN', 'OTHER'] &&
+             data.eventType in ['CLEANUP', 'WORKSHOP', 'MEETING', 'CAMPAIGN', 'OTHER', 'In-Person'] &&
              data.status in ['UPCOMING', 'ONGOING', 'COMPLETED', 'CANCELLED'] &&
              isValidDateString(data.startDate) &&
              data.location is map &&
              data.location.venueName is string && data.location.venueName.size() > 0 &&
-             (!('endDate' in data) || isValidDateString(data.endDate)) &&
-             (!('bonusPoints' in data) || data.bonusPoints is int);
+             (!('endDate' in data) || data.endDate == "" || isValidDateString(data.endDate)) &&
+             (!('bonusPoints' in data) || data.bonusPoints is number);
     }
 
     // ===============================================================

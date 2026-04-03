@@ -76,7 +76,7 @@ export default function DailyQuizCard() {
             <p className="text-sm text-text-secondary leading-relaxed">
               {hasAttempted 
                 ? `You've earned ${lastScore} points today! Come back tomorrow for more.`
-                : "Test your sustainability knowledge and earn up to 50 points daily."}
+                : "Test your sustainability knowledge and earn up to 50 points daily (5 questions, 10 pts each)."}
             </p>
           </div>
 

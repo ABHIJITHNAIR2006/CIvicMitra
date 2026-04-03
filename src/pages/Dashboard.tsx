@@ -6,12 +6,14 @@ import { toast } from "react-hot-toast";
 import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { motion, AnimatePresence } from "motion/react";
-import { Trophy, Zap, Target, ArrowRight, Leaf, Users, Calendar, Database } from "lucide-react";
+import { Trophy, Zap, Target, ArrowRight, Leaf, Users, Calendar, Database, CheckCircle2, Clock, Star } from "lucide-react";
 import { Link } from "react-router-dom";
 import ChallengeCard from "../components/ChallengeCard";
 import ChallengeModal from "../components/ChallengeModal";
 import DailyQuizCard from "../components/DailyQuizCard";
+import QuizModal from "../components/QuizModal";
 import { cn } from "../lib/utils";
+import { useEventData } from "../lib/event-registration-utils";
 
 export default function Dashboard() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -21,6 +23,11 @@ export default function Dashboard() {
   const [selectedChallenge, setSelectedChallenge] = useState<Challenge | null>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [seeding, setSeeding] = useState(false);
+  const [isQuizOpen, setIsQuizOpen] = useState(false);
+  const { registrations, submissions } = useEventData();
+
+  const userSubmissions = submissions.filter(s => s.userEmail === auth.currentUser?.email);
+  const totalSubmissionPoints = userSubmissions.reduce((sum, s) => sum + s.points, 0);
 
   const handleSeedData = async () => {
     setSeeding(true);
@@ -166,6 +173,24 @@ export default function Dashboard() {
         if (activitySnap) {
           setRecentActivity(activitySnap.docs.map(d => ({ id: d.id, ...d.data() } as Completion)));
         }
+
+        // Check for daily quiz attempt
+        const today = new Date().toISOString().split('T')[0];
+        const quizQuery = query(
+          collection(db, "quiz_attempts"),
+          where("userId", "==", auth.currentUser.uid),
+          where("date", "==", today),
+          limit(1)
+        );
+        const quizSnap = await getDocs(quizQuery).catch(e => {
+          console.error("Quiz check failed:", e);
+          return null;
+        });
+
+        if (quizSnap && quizSnap.empty) {
+          // User hasn't taken the quiz today, open it automatically
+          setIsQuizOpen(true);
+        }
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
         toast.error("Some data failed to load. Please refresh.");
@@ -208,7 +233,7 @@ export default function Dashboard() {
           </div>
           <div className="flex gap-4">
             <StatCard icon={<Zap className="text-accent" />} label="Streak" value={`${profile?.currentStreak || 0} Days`} />
-            <StatCard icon={<Trophy className="text-yellow-500" />} label="Points" value={profile?.points || 0} />
+            <StatCard icon={<Trophy className="text-yellow-500" />} label="Points" value={(profile?.points || 0) + totalSubmissionPoints} />
           </div>
         </div>
 
@@ -255,24 +280,71 @@ export default function Dashboard() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Recent Activity */}
-          <div className="lg:col-span-2">
-            <h2 className="text-2xl mb-6 flex items-center gap-2">
-              <Calendar className="text-primary" />
-              Recent Activity
-            </h2>
-            <div className="bg-white rounded-3xl card-shadow overflow-hidden">
-              {recentActivity.length > 0 ? (
-                <div className="divide-y divide-gray-50">
-                  {recentActivity.map((activity) => (
-                    <ActivityItem key={activity.id} activity={activity} />
-                  ))}
-                </div>
-              ) : (
-                <div className="p-12 text-center">
-                  <Leaf className="mx-auto text-gray-200 mb-4" size={48} />
-                  <p className="text-text-secondary">No activity yet. Start a challenge to see your progress!</p>
-                </div>
-              )}
+          <div className="lg:col-span-2 space-y-10">
+            <div>
+              <h2 className="text-2xl mb-6 flex items-center gap-2">
+                <Calendar className="text-primary" />
+                Recent Activity
+              </h2>
+              <div className="bg-white rounded-3xl card-shadow overflow-hidden">
+                {recentActivity.length > 0 ? (
+                  <div className="divide-y divide-gray-50">
+                    {recentActivity.map((activity) => (
+                      <ActivityItem key={activity.id} activity={activity} />
+                    ))}
+                  </div>
+                ) : (
+                  <div className="p-12 text-center">
+                    <Leaf className="mx-auto text-gray-200 mb-4" size={48} />
+                    <p className="text-text-secondary">No activity yet. Start a challenge to see your progress!</p>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* My Event Submissions */}
+            <div>
+              <h2 className="text-2xl mb-6 flex items-center gap-2">
+                <Star className="text-primary" />
+                My Event Submissions
+              </h2>
+              <div className="bg-white rounded-3xl card-shadow overflow-hidden">
+                {userSubmissions.length > 0 ? (
+                  <>
+                    <div className="divide-y divide-gray-50">
+                      {userSubmissions.map((sub) => (
+                        <div key={sub.id} className="p-6 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
+                              <CheckCircle2 size={24} />
+                            </div>
+                            <div>
+                              <p className="font-bold">{sub.eventName}</p>
+                              <p className="text-sm text-text-secondary">{sub.type}</p>
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <p className="font-bold text-primary">+{sub.points} pts</p>
+                            <div className="flex items-center gap-1 text-xs text-text-secondary uppercase tracking-widest font-bold">
+                              <Clock size={12} />
+                              {sub.status}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                    <div className="p-6 bg-primary/5 border-t border-primary/10 flex justify-between items-center">
+                      <span className="font-bold text-text-secondary">Total Points from Submissions</span>
+                      <span className="text-2xl font-display font-bold text-primary">⭐ {totalSubmissionPoints}</span>
+                    </div>
+                  </>
+                ) : (
+                  <div className="p-12 text-center">
+                    <Trophy className="mx-auto text-gray-200 mb-4" size={48} />
+                    <p className="text-text-secondary">No event submissions yet. Register for an event to get started!</p>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
 
@@ -304,6 +376,13 @@ export default function Dashboard() {
             <ChallengeModal 
               challenge={selectedChallenge} 
               onClose={() => setSelectedChallenge(null)} 
+            />
+          )}
+          {isQuizOpen && (
+            <QuizModal 
+              isOpen={isQuizOpen} 
+              onClose={() => setIsQuizOpen(false)} 
+              onComplete={() => setIsQuizOpen(false)} 
             />
           )}
         </AnimatePresence>

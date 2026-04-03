@@ -4,18 +4,25 @@ import { db } from "../firebase";
 import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { motion, AnimatePresence } from "motion/react";
-import { Calendar, MapPin, Users, ArrowRight, Star, Plus, Edit2, Trash2 } from "lucide-react";
+import { Calendar, MapPin, Users, ArrowRight, Star, Plus, Edit2, Trash2, CheckCircle2, Camera, Trophy as TrophyIcon } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuth } from "../contexts/AuthContext";
 import EventModal from "../components/EventModal";
 import { toast } from "react-hot-toast";
+import { useEventData, Registration, Submission } from "../lib/event-registration-utils";
+import { RegistrationModal, ProofSubmissionModal, ParticipantsList } from "../components/EventFeatures";
 
 export default function Events() {
   const [events, setEvents] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingEvent, setEditingEvent] = useState<any>(null);
-  const { isAdmin } = useAuth();
+  const [activeTab, setActiveTab] = useState<'events' | 'leaderboard'>('events');
+  const [selectedEventForReg, setSelectedEventForReg] = useState<any>(null);
+  const [selectedEventForProof, setSelectedEventForProof] = useState<any>(null);
+  
+  const { isAdmin, user } = useAuth();
+  const { registrations, submissions, addRegistration, addSubmission, isUserRegistered } = useEventData();
 
   const fetchEvents = useCallback(async () => {
     try {
@@ -58,6 +65,18 @@ export default function Events() {
     setIsModalOpen(true);
   };
 
+  const handleRegistrationSuccess = (reg: Registration) => {
+    addRegistration(reg);
+    setSelectedEventForReg(null);
+    toast.success(`✅ You have successfully registered for ${reg.eventName}!`);
+  };
+
+  const handleSubmissionSuccess = (sub: Submission) => {
+    addSubmission(sub);
+    setSelectedEventForProof(null);
+    toast.success(`🎉 Proof submitted! You earned +${sub.points} points!`);
+  };
+
   return (
     <DashboardLayout>
       <div className="space-y-8">
@@ -66,7 +85,29 @@ export default function Events() {
             <h1 className="text-4xl mb-2">Community Events</h1>
             <p className="text-text-secondary">Join local eco-initiatives and earn bonus points.</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-3">
+            <div className="bg-white p-1 rounded-xl border border-gray-100 flex shadow-sm">
+              <button
+                onClick={() => setActiveTab('events')}
+                className={cn(
+                  "px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2",
+                  activeTab === 'events' ? "bg-primary text-white shadow-md shadow-primary/20" : "text-text-secondary hover:text-primary"
+                )}
+              >
+                <Calendar size={18} />
+                Events
+              </button>
+              <button
+                onClick={() => setActiveTab('leaderboard')}
+                className={cn(
+                  "px-4 py-2 rounded-lg text-sm font-bold transition-all flex items-center gap-2",
+                  activeTab === 'leaderboard' ? "bg-primary text-white shadow-md shadow-primary/20" : "text-text-secondary hover:text-primary"
+                )}
+              >
+                <TrophyIcon size={18} />
+                Participants
+              </button>
+            </div>
             {isAdmin && (
               <button 
                 onClick={handleCreate}
@@ -79,59 +120,88 @@ export default function Events() {
           </div>
         </div>
 
-        {/* Featured Event */}
-        <div className="relative h-96 rounded-3xl overflow-hidden card-shadow group cursor-pointer">
-          <img 
-            src="https://picsum.photos/seed/cleanup/1200/600" 
-            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-            referrerPolicy="no-referrer"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 md:p-12">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="bg-accent text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">Featured</span>
-              <span className="bg-white/20 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">Clean-up Drive</span>
-            </div>
-            <h2 className="text-4xl md:text-5xl text-white mb-4 max-w-2xl">Juhu Beach Clean-up Drive 2026</h2>
-            <div className="flex flex-wrap gap-6 text-white/80 mb-8">
-              <div className="flex items-center gap-2">
-                <Calendar size={20} />
-                <span>March 28, 2026 • 07:00 AM</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <MapPin size={20} />
-                <span>Juhu Beach, Mumbai</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Users size={20} />
-                <span>124 Joined</span>
-              </div>
-            </div>
-            <button className="w-fit px-8 py-4 bg-white text-primary rounded-xl font-bold hover:bg-gray-100 transition-colors flex items-center gap-2">
-              Register Now <ArrowRight size={20} />
-            </button>
-          </div>
-        </div>
-
-        {/* Events Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-          {loading ? (
-            [1, 2, 3, 4].map(i => <div key={i} className="h-64 bg-gray-200 rounded-3xl animate-pulse" />)
-          ) : events.length > 0 ? (
-            events.map(event => (
-              <EventCard 
-                key={event.id} 
-                event={event} 
-                isAdmin={isAdmin}
-                onEdit={() => handleEdit(event)}
-                onDelete={() => handleDelete(event.id)}
+        {activeTab === 'events' ? (
+          <>
+            {/* Featured Event */}
+            <div className="relative h-96 rounded-3xl overflow-hidden card-shadow group cursor-pointer">
+              <img 
+                src="https://picsum.photos/seed/cleanup/1200/600" 
+                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                referrerPolicy="no-referrer"
               />
-            ))
-          ) : (
-            <div className="col-span-full py-20 text-center bg-white rounded-3xl card-shadow">
-              <p className="text-text-secondary">No upcoming events found. Check back later!</p>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 md:p-12">
+                <div className="flex items-center gap-2 mb-4">
+                  <span className="bg-accent text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">Featured</span>
+                  <span className="bg-white/20 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">Clean-up Drive</span>
+                </div>
+                <h2 className="text-4xl md:text-5xl text-white mb-4 max-w-2xl">Juhu Beach Clean-up Drive 2026</h2>
+                <div className="flex flex-wrap gap-6 text-white/80 mb-8">
+                  <div className="flex items-center gap-2">
+                    <Calendar size={20} />
+                    <span>March 28, 2026 • 07:00 AM</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <MapPin size={20} />
+                    <span>Juhu Beach, Mumbai</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Users size={20} />
+                    <span>124 Joined</span>
+                  </div>
+                </div>
+                <button className="w-fit px-8 py-4 bg-white text-primary rounded-xl font-bold hover:bg-gray-100 transition-colors flex items-center gap-2">
+                  Register Now <ArrowRight size={20} />
+                </button>
+              </div>
             </div>
-          )}
-        </div>
+
+            {/* Events Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              {loading ? (
+                [1, 2, 3, 4].map(i => <div key={i} className="h-64 bg-gray-200 rounded-3xl animate-pulse" />)
+              ) : events.length > 0 ? (
+                events.map(event => (
+                  <EventCard 
+                    key={event.id} 
+                    event={event} 
+                    isAdmin={isAdmin}
+                    userEmail={user?.email || null}
+                    isRegistered={isUserRegistered(user?.email || '', event.id)}
+                    onEdit={() => handleEdit(event)}
+                    onDelete={() => handleDelete(event.id)}
+                    onRegister={() => setSelectedEventForReg(event)}
+                    onSubmitProof={() => setSelectedEventForProof(event)}
+                  />
+                ))
+              ) : (
+                <div className="col-span-full py-20 text-center bg-white rounded-3xl card-shadow">
+                  <p className="text-text-secondary">No upcoming events found. Check back later!</p>
+                </div>
+              )}
+            </div>
+          </>
+        ) : (
+          <div className="space-y-12">
+            {events.map(event => (
+              <div key={event.id} className="space-y-4">
+                <div className="flex items-center gap-4 px-2">
+                  <div className="w-12 h-12 bg-primary/10 rounded-xl flex items-center justify-center text-primary">
+                    <Calendar size={24} />
+                  </div>
+                  <div>
+                    <h3 className="text-2xl font-bold text-text-primary">{event.title}</h3>
+                    <p className="text-text-secondary text-sm">{new Date(event.startDate).toLocaleDateString()} • {event.location?.venueName || 'Online'}</p>
+                  </div>
+                </div>
+                <ParticipantsList 
+                  eventId={event.id}
+                  registrations={registrations}
+                  submissions={submissions}
+                />
+              </div>
+            ))}
+          </div>
+        )}
 
         <AnimatePresence>
           {isModalOpen && (
@@ -142,12 +212,46 @@ export default function Events() {
             />
           )}
         </AnimatePresence>
+
+        <RegistrationModal
+          isOpen={!!selectedEventForReg}
+          onClose={() => setSelectedEventForReg(null)}
+          event={selectedEventForReg || { id: '', title: '' }}
+          userEmail={user?.email || null}
+          onSuccess={handleRegistrationSuccess}
+        />
+
+        <ProofSubmissionModal
+          isOpen={!!selectedEventForProof}
+          onClose={() => setSelectedEventForProof(null)}
+          event={selectedEventForProof || { id: '', title: '' }}
+          userEmail={user?.email || ''}
+          onSuccess={handleSubmissionSuccess}
+        />
       </div>
     </DashboardLayout>
   );
 }
 
-function EventCard({ event, isAdmin, onEdit, onDelete }: { event: any, isAdmin: boolean, onEdit: () => void, onDelete: () => void }) {
+function EventCard({ 
+  event, 
+  isAdmin, 
+  userEmail,
+  isRegistered,
+  onEdit, 
+  onDelete,
+  onRegister,
+  onSubmitProof
+}: { 
+  event: any, 
+  isAdmin: boolean, 
+  userEmail: string | null,
+  isRegistered: boolean,
+  onEdit: () => void, 
+  onDelete: () => void,
+  onRegister: () => void,
+  onSubmitProof: () => void
+}) {
   return (
     <motion.div 
       whileHover={{ y: -4 }}
@@ -192,9 +296,37 @@ function EventCard({ event, isAdmin, onEdit, onDelete }: { event: any, isAdmin: 
             <span>{event.location?.venueName || 'Online'}</span>
           </div>
         </div>
-        <button className="w-full py-3 bg-gray-50 text-primary rounded-xl font-bold hover:bg-primary hover:text-white transition-all">
-          View Details
-        </button>
+        
+        <div className="space-y-3">
+          {isRegistered ? (
+            <div className="space-y-3">
+              <button 
+                disabled
+                className="w-full py-3 bg-green-50 text-green-600 rounded-xl font-bold flex items-center justify-center gap-2 border border-green-100"
+              >
+                <CheckCircle2 size={18} />
+                Registered
+              </button>
+              <button 
+                onClick={onSubmitProof}
+                className="w-full py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary-light transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+              >
+                <Camera size={18} />
+                Submit Proof to Earn Points
+              </button>
+            </div>
+          ) : (
+            <button 
+              onClick={onRegister}
+              className="w-full py-3 bg-primary text-white rounded-xl font-bold hover:bg-primary-light transition-all flex items-center justify-center gap-2 shadow-lg shadow-primary/20"
+            >
+              Register for Event
+            </button>
+          )}
+          <button className="w-full py-2 text-text-secondary text-sm font-medium hover:text-primary transition-colors">
+            View Details
+          </button>
+        </div>
       </div>
     </motion.div>
   );

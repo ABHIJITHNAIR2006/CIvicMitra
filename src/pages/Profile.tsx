@@ -7,6 +7,7 @@ import { UserProfile, Completion, Badge } from "../types";
 import { motion } from "motion/react";
 import { MapPin, Calendar, Award, Grid, List, Flame, Star } from "lucide-react";
 import { cn } from "../lib/utils";
+import { useEventData } from "../lib/event-registration-utils";
 
 export default function Profile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -14,6 +15,11 @@ export default function Profile() {
   const [badges, setBadges] = useState<Badge[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("ACTIVITY");
+  const { submissions } = useEventData();
+
+  const totalSubmissionPoints = submissions
+    .filter(s => s.userEmail === auth.currentUser?.email)
+    .reduce((sum, s) => sum + s.points, 0);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -89,7 +95,7 @@ export default function Profile() {
 
         {/* Stats Grid */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard icon={<Star className="text-primary" />} label="Total Points" value={profile?.points || 0} />
+          <StatCard icon={<Star className="text-primary" />} label="Total Points" value={(profile?.points || 0) + totalSubmissionPoints} />
           <StatCard icon={<Flame className="text-accent" />} label="Current Streak" value={profile?.currentStreak || 0} />
           <StatCard icon={<Award className="text-primary-light" />} label="Badges" value={badges.length} />
           <StatCard icon={<Grid className="text-gray-400" />} label="Level" value={profile?.level || 1} />

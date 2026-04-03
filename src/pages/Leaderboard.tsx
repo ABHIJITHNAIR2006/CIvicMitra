@@ -6,11 +6,17 @@ import { UserProfile } from "../types";
 import { motion } from "motion/react";
 import { Trophy, Medal, Star, Flame } from "lucide-react";
 import { cn } from "../lib/utils";
+import { useEventData } from "../lib/event-registration-utils";
 
 export default function Leaderboard() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("ALL_TIME");
+  const { submissions } = useEventData();
+
+  const eventPoints = submissions
+    .filter(s => s.userEmail === auth.currentUser?.email)
+    .reduce((total, s) => total + s.points, 0);
 
   useEffect(() => {
     setLoading(true);
@@ -67,9 +73,9 @@ export default function Leaderboard() {
         {/* Podium */}
         {!loading && podiumUsers.length >= 3 && (
           <div className="flex items-end justify-center gap-4 md:gap-12 py-12">
-            <PodiumItem user={podiumUsers[0]} rank={2} height="h-48" />
-            <PodiumItem user={podiumUsers[1]} rank={1} height="h-64" />
-            <PodiumItem user={podiumUsers[2]} rank={3} height="h-40" />
+            <PodiumItem user={podiumUsers[0]} rank={2} height="h-48" eventPoints={eventPoints} />
+            <PodiumItem user={podiumUsers[1]} rank={1} height="h-64" eventPoints={eventPoints} />
+            <PodiumItem user={podiumUsers[2]} rank={3} height="h-40" eventPoints={eventPoints} />
           </div>
         )}
 
@@ -116,7 +122,9 @@ export default function Leaderboard() {
                     {user.currentStreak}
                   </div>
                   <div className="col-span-2 text-right font-bold text-primary">
-                    {user.points.toLocaleString()}
+                    {user.uid === auth.currentUser?.uid 
+                      ? (user.points + eventPoints).toLocaleString() 
+                      : user.points.toLocaleString()}
                   </div>
                 </motion.div>
               ))}
@@ -128,7 +136,7 @@ export default function Leaderboard() {
   );
 }
 
-const PodiumItem = memo(({ user, rank, height }: { user: UserProfile, rank: number, height: string }) => {
+const PodiumItem = memo(({ user, rank, height, eventPoints }: { user: UserProfile, rank: number, height: string, eventPoints: number }) => {
   return (
     <div className="flex flex-col items-center gap-4">
       <div className="relative">
@@ -151,7 +159,11 @@ const PodiumItem = memo(({ user, rank, height }: { user: UserProfile, rank: numb
       </div>
       <div className="text-center">
         <p className="font-bold text-sm md:text-base">{user.fullName}</p>
-        <p className="text-primary font-bold">{user.points} pts</p>
+        <p className="text-primary font-bold">
+          {user.uid === auth.currentUser?.uid 
+            ? (user.points + eventPoints) 
+            : user.points} pts
+        </p>
       </div>
       <motion.div 
         initial={{ height: 0 }}

@@ -28,7 +28,7 @@ export default function EventModal({ event, onClose, onSuccess }: EventModalProp
       address: ""
     },
     bonusPoints: 50,
-    eventType: "In-Person",
+    eventType: "CLEANUP",
     bannerImageUrl: "",
     status: "UPCOMING"
   });
@@ -68,17 +68,21 @@ export default function EventModal({ event, onClose, onSuccess }: EventModalProp
 
     setLoading(true);
     try {
+      const dataToSave = { ...formData };
+      if (!dataToSave.endDate) delete (dataToSave as any).endDate;
+      if (!dataToSave.bannerImageUrl) delete (dataToSave as any).bannerImageUrl;
+
       if (event?.id) {
         // Update
         await setDoc(doc(db, "events", event.id), {
-          ...formData,
+          ...dataToSave,
           updatedAt: new Date().toISOString()
         }).catch(e => handleFirestoreError(e, OperationType.UPDATE, `events/${event.id}`));
         toast.success("Event updated successfully!");
       } else {
         // Create
         await addDoc(collection(db, "events"), {
-          ...formData,
+          ...dataToSave,
           createdAt: new Date().toISOString(),
           eventId: Math.random().toString(36).substring(7)
         }).catch(e => handleFirestoreError(e, OperationType.CREATE, "events"));
@@ -174,6 +178,38 @@ export default function EventModal({ event, onClose, onSuccess }: EventModalProp
                   className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
                 />
               </div>
+            </div>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-text-secondary uppercase tracking-wider">Event Type *</label>
+              <select
+                required
+                value={formData.eventType}
+                onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
+              >
+                <option value="CLEANUP">Cleanup Drive</option>
+                <option value="WORKSHOP">Workshop</option>
+                <option value="MEETING">Community Meeting</option>
+                <option value="CAMPAIGN">Awareness Campaign</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </div>
+            <div className="space-y-2">
+              <label className="text-sm font-bold text-text-secondary uppercase tracking-wider">Status *</label>
+              <select
+                required
+                value={formData.status}
+                onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
+              >
+                <option value="UPCOMING">Upcoming</option>
+                <option value="ONGOING">Ongoing</option>
+                <option value="COMPLETED">Completed</option>
+                <option value="CANCELLED">Cancelled</option>
+              </select>
             </div>
           </div>
 

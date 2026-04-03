@@ -14,7 +14,8 @@ import {
   Menu,
   X,
   Flame,
-  ShieldCheck
+  ShieldCheck,
+  Star
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
@@ -23,6 +24,7 @@ import { cn } from "../lib/utils";
 import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { Role } from "../types";
+import { useEventData } from "../lib/event-registration-utils";
 
 const baseNavItems = [
   { icon: Home, label: "Dashboard", path: "/dashboard" },
@@ -37,36 +39,51 @@ const baseNavItems = [
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
+  const [firestorePoints, setFirestorePoints] = useState(0);
   const location = useLocation();
   const navigate = useNavigate();
+  const { submissions } = useEventData();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (!user) {
         setIsAdmin(false);
+        setUserEmail(null);
+        setFirestorePoints(0);
         return;
       }
       
-      if (user.email === "arcadeabhi6@gmail.com") {
-        setIsAdmin(true);
-        return;
-      }
-
+      setUserEmail(user.email);
+      
       try {
         const userDoc = await getDoc(doc(db, "users", user.uid)).catch(e => {
-          console.error("Admin status check failed:", e);
+          console.error("User profile fetch failed:", e);
           return null;
         });
-        if (userDoc && userDoc.exists() && userDoc.data().role === Role.ADMIN) {
+        
+        if (userDoc && userDoc.exists()) {
+          const userData = userDoc.data();
+          setFirestorePoints(userData.points || 0);
+          if (userData.role === Role.ADMIN || user.email === "arcadeabhi6@gmail.com") {
+            setIsAdmin(true);
+          }
+        } else if (user.email === "arcadeabhi6@gmail.com") {
           setIsAdmin(true);
         }
       } catch (error) {
-        console.error("Error checking admin status:", error);
+        console.error("Error checking user status:", error);
       }
     });
 
     return () => unsubscribe();
   }, []);
+
+  const eventPoints = submissions
+    .filter(s => s.userEmail === userEmail)
+    .reduce((total, s) => total + s.points, 0);
+
+  const totalPoints = firestorePoints + eventPoints;
 
   const navItems = isAdmin 
     ? [...baseNavItems, { icon: ShieldCheck, label: "Admin", path: "/admin" }]
@@ -86,6 +103,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <Zap className="text-white" size={24} />
           </div>
           <span className="text-2xl font-display font-bold text-primary">CivicMitra</span>
+        </div>
+
+        <div className="mb-6 px-4 py-3 bg-primary/5 rounded-xl border border-primary/10 flex items-center gap-3">
+          <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
+            <Star className="text-primary" size={18} />
+          </div>
+          <div>
+            <p className="text-xs text-text-secondary font-medium">Your Points</p>
+            <p className="text-lg font-bold text-primary">⭐ {totalPoints} Points</p>
+          </div>
         </div>
 
         <nav className="flex-1 space-y-2">
@@ -123,7 +150,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
           <span className="text-xl font-display font-bold text-primary">CivicMitra</span>
         </div>
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
+          <div className="bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/10 flex items-center gap-1.5">
+            <Star className="text-primary" size={14} />
+            <span className="text-sm font-bold text-primary">{totalPoints}</span>
+          </div>
           <button className="p-2 text-text-secondary">
             <Bell size={20} />
           </button>

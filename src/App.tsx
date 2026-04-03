@@ -18,7 +18,6 @@ const Feed = lazy(() => import("./pages/Feed"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Settings = lazy(() => import("./pages/Settings"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
-const AdminQuizManager = lazy(() => import("./pages/AdminQuizManager"));
 const AdminChallengeManager = lazy(() => import("./pages/AdminChallengeManager"));
 
 const queryClient = new QueryClient({
@@ -65,7 +64,6 @@ function AppContent() {
           
           {/* Admin Routes */}
           <Route path="/admin" element={user ? <AdminDashboard /> : <Navigate to="/login" />} />
-          <Route path="/admin/quiz" element={user ? <AdminQuizManager /> : <Navigate to="/login" />} />
           <Route path="/admin/challenges" element={user ? <AdminChallengeManager /> : <Navigate to="/login" />} />
         </Routes>
       </Suspense>
