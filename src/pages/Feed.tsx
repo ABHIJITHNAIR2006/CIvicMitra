@@ -1,11 +1,11 @@
-import { useEffect, useState, useCallback, memo } from "react";
+import { useEffect, useState, useCallback, memo, useRef } from "react";
 import { collection, query, orderBy, limit, onSnapshot, doc, getDoc, addDoc } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { Completion } from "../types";
 import { motion, AnimatePresence } from "motion/react";
-import { Heart, MessageCircle, Share2, MoreHorizontal, Send, Image as ImageIcon } from "lucide-react";
+import { Heart, MessageCircle, Share2, MoreHorizontal, Send, Image as ImageIcon, X } from "lucide-react";
 import { cn } from "../lib/utils";
 import { toast } from "react-hot-toast";
 
@@ -17,6 +17,24 @@ export default function Feed() {
   const [loading, setLoading] = useState(true);
   const [newPost, setNewPost] = useState("");
   const [isPosting, setIsPosting] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > 500 * 1024) {
+      toast.error("Image size must be less than 500KB");
+      return;
+    }
+
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setSelectedImage(reader.result as string);
+    };
+    reader.readAsDataURL(file);
+  };
 
   useEffect(() => {
     const q = query(collection(db, "completions"), orderBy("submittedAt", "desc"), limit(20));
@@ -59,7 +77,7 @@ export default function Feed() {
       const postData = {
         userId: auth.currentUser.uid,
         challengeId: "community-update",
-        proofUrl: `https://picsum.photos/seed/${Math.random()}/800/800`, 
+        proofUrl: selectedImage || `https://picsum.photos/seed/${Math.random()}/800/800`, 
         proofType: "IMAGE",
         aiVerificationStatus: "VERIFIED",
         aiVerificationScore: 1.0,
@@ -72,13 +90,14 @@ export default function Feed() {
 
       await addDoc(collection(db, "completions"), postData).catch(e => handleFirestoreError(e, OperationType.CREATE, "completions"));
       setNewPost("");
+      setSelectedImage(null);
       toast.success("Update shared with the community!");
     } catch (error) {
       toast.error("Failed to post update");
     } finally {
       setIsPosting(false);
     }
-  }, [newPost]);
+  }, [newPost, selectedImage]);
 
   return (
     <DashboardLayout>
@@ -98,21 +117,49 @@ export default function Feed() {
               <div className="w-12 h-12 rounded-full bg-primary/5 overflow-hidden flex-shrink-0">
                 <img src={auth.currentUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${auth.currentUser?.uid}`} className="w-full h-full object-cover" />
               </div>
-              <textarea 
-                value={newPost}
-                onChange={(e) => setNewPost(e.target.value)}
-                placeholder="Share your eco-journey with the community..."
-                className="w-full bg-primary/5 border border-primary/10 rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary resize-none min-h-[100px] transition-all text-text-primary"
-              />
+              <div className="flex-1 space-y-4">
+                <textarea 
+                  value={newPost}
+                  onChange={(e) => setNewPost(e.target.value)}
+                  placeholder="Share your eco-journey with the community..."
+                  className="w-full bg-primary/5 border border-primary/10 rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary resize-none min-h-[100px] transition-all text-text-primary"
+                />
+                
+                {selectedImage && (
+                  <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-primary/5 group">
+                    <img src={selectedImage} className="w-full h-full object-cover" />
+                    <button 
+                      type="button"
+                      onClick={() => setSelectedImage(null)}
+                      className="absolute top-2 right-2 p-2 bg-black/50 text-white rounded-full hover:bg-black/70 transition-all opacity-0 group-hover:opacity-100"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
+                )}
+              </div>
             </div>
+            
+            <input 
+              type="file"
+              ref={fileInputRef}
+              onChange={handleImageChange}
+              accept="image/*"
+              className="hidden"
+            />
+
             <div className="flex items-center justify-between pt-2 border-t border-primary/5">
-              <button type="button" className="flex items-center gap-2 text-text-secondary hover:text-primary font-bold transition-colors">
+              <button 
+                type="button" 
+                onClick={() => fileInputRef.current?.click()}
+                className="flex items-center gap-2 text-text-secondary hover:text-primary font-bold transition-colors"
+              >
                 <ImageIcon size={20} />
-                <span>Add Photo</span>
+                <span>{selectedImage ? "Change Photo" : "Add Photo"}</span>
               </button>
               <button 
                 type="submit"
-                disabled={!newPost.trim() || isPosting}
+                disabled={(!newPost.trim() && !selectedImage) || isPosting}
                 className="flex items-center gap-2 px-6 py-2 bg-primary text-white rounded-xl font-bold hover:bg-primary-light transition-all disabled:opacity-50 shadow-md"
               >
                 <Send size={18} />
