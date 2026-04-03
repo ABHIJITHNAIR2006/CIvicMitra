@@ -103,13 +103,13 @@ export default function RegisterPage() {
       <motion.div 
         initial={{ opacity: 0, scale: 0.95 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-lg bg-white p-8 rounded-3xl card-shadow"
+        className="w-full max-w-lg bg-card p-8 rounded-3xl card-shadow border border-primary/10"
       >
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
             <UserPlus className="text-primary" size={32} />
           </div>
-          <h1 className="text-3xl">Join CivicMitra</h1>
+          <h1 className="text-3xl text-text-primary">Join CivicMitra</h1>
           <p className="text-text-secondary">Start your sustainable journey today</p>
         </div>
 
@@ -162,12 +162,12 @@ export default function RegisterPage() {
               <select
                 value={formData.country}
                 onChange={(e) => setFormData({...formData, country: e.target.value})}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+                className="w-full px-4 py-3 bg-primary/5 border border-primary/10 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-text-primary"
               >
-                <option value="India">India</option>
-                <option value="USA">USA</option>
-                <option value="UK">UK</option>
-                <option value="Canada">Canada</option>
+                <option value="India" className="bg-card">India</option>
+                <option value="USA" className="bg-card">USA</option>
+                <option value="UK" className="bg-card">UK</option>
+                <option value="Canada" className="bg-card">Canada</option>
               </select>
             </div>
           </div>
@@ -184,17 +184,17 @@ export default function RegisterPage() {
         <div className="mt-6">
           <div className="relative mb-6">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-gray-200"></div>
+              <div className="w-full border-t border-primary/10"></div>
             </div>
             <div className="relative flex justify-center text-sm">
-              <span className="px-2 bg-white text-text-secondary">Or continue with</span>
+              <span className="px-2 bg-card text-text-secondary">Or continue with</span>
             </div>
           </div>
 
           <button
             onClick={handleGoogleSignIn}
             disabled={loading}
-            className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-white border border-gray-200 rounded-xl font-bold text-text-primary hover:bg-gray-50 transition-colors disabled:opacity-50"
+            className="w-full flex items-center justify-center gap-3 py-3 px-4 bg-card border border-primary/10 rounded-xl font-bold text-text-primary hover:bg-primary/5 transition-colors disabled:opacity-50"
           >
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google" className="w-5 h-5" />
             Sign in with Google
@@ -217,7 +217,7 @@ function InputField({ label, icon, value, onChange, placeholder, type = "text" }
     <div className="space-y-2">
       <label className="text-sm font-medium text-text-secondary">{label}</label>
       <div className="relative">
-        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400">
+        <div className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary/50">
           {icon}
         </div>
         <input
@@ -225,7 +225,7 @@ function InputField({ label, icon, value, onChange, placeholder, type = "text" }
           required
           value={value}
           onChange={(e) => onChange(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all"
+          className="w-full pl-10 pr-4 py-3 bg-primary/5 border border-primary/10 rounded-xl focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all text-text-primary"
           placeholder={placeholder}
         />
       </div>

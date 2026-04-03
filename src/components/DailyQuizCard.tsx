@@ -45,7 +45,7 @@ export default function DailyQuizCard() {
 
   if (loading) {
     return (
-      <div className="bg-white p-6 rounded-[2rem] card-shadow animate-pulse h-48" />
+      <div className="bg-card p-6 rounded-[2rem] card-shadow animate-pulse h-48" />
     );
   }
 
@@ -53,7 +53,7 @@ export default function DailyQuizCard() {
     <>
       <motion.div 
         whileHover={{ y: -5 }}
-        className="bg-white p-8 rounded-[2.5rem] card-shadow relative overflow-hidden group"
+        className="bg-card p-8 rounded-[2.5rem] card-shadow relative overflow-hidden group"
       >
         {/* Background Decoration */}
         <div className="absolute -top-12 -right-12 w-32 h-32 bg-primary/5 rounded-full blur-3xl group-hover:bg-primary/10 transition-all" />
@@ -72,7 +72,7 @@ export default function DailyQuizCard() {
           </div>
 
           <div className="space-y-2">
-            <h3 className="text-xl font-bold text-gray-900">Daily Eco-Quiz</h3>
+            <h3 className="text-xl font-bold text-text-primary">Daily Eco-Quiz</h3>
             <p className="text-sm text-text-secondary leading-relaxed">
               {hasAttempted 
                 ? `You've earned ${lastScore} points today! Come back tomorrow for more.`

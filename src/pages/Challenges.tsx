@@ -191,19 +191,19 @@ export default function Challenges() {
           </div>
           <div className="flex flex-col sm:flex-row gap-4 w-full md:w-auto">
             <div className="relative flex-1 sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" size={20} />
               <input
                 type="text"
                 placeholder="Search challenges..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-10 pr-4 py-3 bg-white border border-gray-100 rounded-xl card-shadow outline-none focus:ring-2 focus:ring-primary"
+                className="w-full pl-10 pr-4 py-3 bg-card border border-primary/10 rounded-xl card-shadow outline-none focus:ring-2 focus:ring-primary text-text-primary"
               />
             </div>
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-3 bg-white border border-gray-100 rounded-xl card-shadow outline-none focus:ring-2 focus:ring-primary font-bold"
+              className="px-4 py-3 bg-card border border-primary/10 rounded-xl card-shadow outline-none focus:ring-2 focus:ring-primary font-bold text-text-primary"
             >
               <option value="ALL">All Categories</option>
               {Object.values(Category).map(cat => (
@@ -230,9 +230,9 @@ export default function Challenges() {
             ))}
           </div>
         ) : (
-          <div className="text-center py-20 bg-white rounded-3xl card-shadow">
-            <div className="w-20 h-20 bg-gray-50 rounded-full flex items-center justify-center mx-auto mb-6">
-              <Search className="text-gray-300" size={40} />
+          <div className="text-center py-20 bg-card rounded-3xl card-shadow">
+            <div className="w-20 h-20 bg-primary/5 rounded-full flex items-center justify-center mx-auto mb-6">
+              <Search className="text-text-secondary opacity-20" size={40} />
             </div>
             <h3 className="text-2xl mb-2">No challenges found</h3>
             <p className="text-text-secondary mb-8">Try adjusting your filters or search terms.</p>

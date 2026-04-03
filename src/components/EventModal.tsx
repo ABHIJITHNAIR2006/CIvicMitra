@@ -101,7 +101,7 @@ export default function EventModal({ event, onClose, onSuccess }: EventModalProp
   if (!isAdmin) {
     return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-        <div className="bg-white p-8 rounded-3xl text-center space-y-4">
+        <div className="bg-card p-8 rounded-3xl text-center space-y-4">
           <h2 className="text-2xl font-bold text-red-500">Unauthorized</h2>
           <p className="text-text-secondary">Only administrators can create or edit events.</p>
           <button onClick={onClose} className="px-6 py-2 bg-primary text-white rounded-xl font-bold">Close</button>
@@ -116,11 +116,11 @@ export default function EventModal({ event, onClose, onSuccess }: EventModalProp
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="bg-white w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
+        className="bg-card w-full max-w-2xl rounded-3xl overflow-hidden shadow-2xl flex flex-col max-h-[90vh]"
       >
-        <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-white sticky top-0 z-10">
-          <h2 className="text-2xl font-bold">{event ? "Edit Event" : "Create New Event"}</h2>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+        <div className="p-6 border-b border-primary/10 flex items-center justify-between bg-card sticky top-0 z-10">
+          <h2 className="text-2xl font-bold text-text-primary">{event ? "Edit Event" : "Create New Event"}</h2>
+          <button onClick={onClose} className="p-2 hover:bg-primary/5 rounded-full transition-colors">
             <X size={24} />
           </button>
         </div>
@@ -129,13 +129,13 @@ export default function EventModal({ event, onClose, onSuccess }: EventModalProp
           <div className="space-y-2">
             <label className="text-sm font-bold text-text-secondary uppercase tracking-wider">Event Title *</label>
             <div className="relative">
-              <Info className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <Info className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary" size={20} />
               <input
                 type="text"
                 required
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
+                className="w-full pl-12 pr-4 py-3 bg-primary/5 border border-primary/10 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-text-primary"
                 placeholder="e.g. Beach Clean-up Drive"
               />
             </div>
@@ -148,7 +148,7 @@ export default function EventModal({ event, onClose, onSuccess }: EventModalProp
               rows={4}
               value={formData.description}
               onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-              className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all resize-none"
+              className="w-full px-4 py-3 bg-primary/5 border border-primary/10 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all resize-none text-text-primary"
               placeholder="Describe the event and its impact..."
             />
           </div>
@@ -157,25 +157,25 @@ export default function EventModal({ event, onClose, onSuccess }: EventModalProp
             <div className="space-y-2">
               <label className="text-sm font-bold text-text-secondary uppercase tracking-wider">Start Date & Time *</label>
               <div className="relative">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary" size={20} />
                 <input
                   type="datetime-local"
                   required
                   value={formData.startDate}
                   onChange={(e) => setFormData({ ...formData, startDate: e.target.value })}
-                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
+                  className="w-full pl-12 pr-4 py-3 bg-primary/5 border border-primary/10 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-text-primary"
                 />
               </div>
             </div>
             <div className="space-y-2">
               <label className="text-sm font-bold text-text-secondary uppercase tracking-wider">End Date & Time</label>
               <div className="relative">
-                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <Calendar className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary" size={20} />
                 <input
                   type="datetime-local"
                   value={formData.endDate}
                   onChange={(e) => setFormData({ ...formData, endDate: e.target.value })}
-                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
+                  className="w-full pl-12 pr-4 py-3 bg-primary/5 border border-primary/10 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-text-primary"
                 />
               </div>
             </div>
@@ -188,7 +188,7 @@ export default function EventModal({ event, onClose, onSuccess }: EventModalProp
                 required
                 value={formData.eventType}
                 onChange={(e) => setFormData({ ...formData, eventType: e.target.value })}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
+                className="w-full px-4 py-3 bg-primary/5 border border-primary/10 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-text-primary"
               >
                 <option value="CLEANUP">Cleanup Drive</option>
                 <option value="WORKSHOP">Workshop</option>
@@ -203,7 +203,7 @@ export default function EventModal({ event, onClose, onSuccess }: EventModalProp
                 required
                 value={formData.status}
                 onChange={(e) => setFormData({ ...formData, status: e.target.value })}
-                className="w-full px-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
+                className="w-full px-4 py-3 bg-primary/5 border border-primary/10 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-text-primary"
               >
                 <option value="UPCOMING">Upcoming</option>
                 <option value="ONGOING">Ongoing</option>
@@ -217,13 +217,13 @@ export default function EventModal({ event, onClose, onSuccess }: EventModalProp
             <div className="space-y-2">
               <label className="text-sm font-bold text-text-secondary uppercase tracking-wider">Venue Name *</label>
               <div className="relative">
-                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <MapPin className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary" size={20} />
                 <input
                   type="text"
                   required
                   value={formData.location.venueName}
                   onChange={(e) => setFormData({ ...formData, location: { ...formData.location, venueName: e.target.value } })}
-                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
+                  className="w-full pl-12 pr-4 py-3 bg-primary/5 border border-primary/10 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-text-primary"
                   placeholder="e.g. Juhu Beach"
                 />
               </div>
@@ -231,13 +231,13 @@ export default function EventModal({ event, onClose, onSuccess }: EventModalProp
             <div className="space-y-2">
               <label className="text-sm font-bold text-text-secondary uppercase tracking-wider">Bonus Points *</label>
               <div className="relative">
-                <Star className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+                <Star className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary" size={20} />
                 <input
                   type="number"
                   required
                   value={formData.bonusPoints}
                   onChange={(e) => setFormData({ ...formData, bonusPoints: parseInt(e.target.value) })}
-                  className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
+                  className="w-full pl-12 pr-4 py-3 bg-primary/5 border border-primary/10 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-text-primary"
                 />
               </div>
             </div>
@@ -246,22 +246,22 @@ export default function EventModal({ event, onClose, onSuccess }: EventModalProp
           <div className="space-y-2">
             <label className="text-sm font-bold text-text-secondary uppercase tracking-wider">Banner Image URL</label>
             <div className="relative">
-              <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" size={20} />
+              <ImageIcon className="absolute left-4 top-1/2 -translate-y-1/2 text-text-secondary" size={20} />
               <input
                 type="url"
                 value={formData.bannerImageUrl}
                 onChange={(e) => setFormData({ ...formData, bannerImageUrl: e.target.value })}
-                className="w-full pl-12 pr-4 py-3 bg-gray-50 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all"
+                className="w-full pl-12 pr-4 py-3 bg-primary/5 border border-primary/10 rounded-xl focus:ring-2 focus:ring-primary outline-none transition-all text-text-primary"
                 placeholder="https://example.com/image.jpg"
               />
             </div>
           </div>
 
-          <div className="flex gap-4 pt-4 sticky bottom-0 bg-white pb-4">
+          <div className="flex gap-4 pt-4 sticky bottom-0 bg-card pb-4">
             <button
               type="button"
               onClick={onClose}
-              className="flex-1 py-4 bg-gray-100 text-text-primary rounded-xl font-bold hover:bg-gray-200 transition-colors"
+              className="flex-1 py-4 bg-primary/5 text-text-primary rounded-xl font-bold hover:bg-primary/10 transition-colors"
             >
               Cancel
             </button>

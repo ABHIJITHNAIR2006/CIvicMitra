@@ -156,15 +156,15 @@ export default function QuizModal({ isOpen, onClose, onComplete }: QuizModalProp
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="bg-white w-full max-w-2xl rounded-[2.5rem] overflow-hidden shadow-2xl relative"
+        className="bg-card w-full max-w-2xl rounded-[2.5rem] overflow-hidden shadow-2xl relative"
       >
         {/* Header */}
-        <div className="p-8 border-b border-gray-100 flex justify-between items-center bg-gradient-to-r from-primary/5 to-transparent">
+        <div className="p-8 border-b border-primary/10 flex justify-between items-center bg-gradient-to-r from-primary/5 to-transparent">
           <div>
-            <h2 className="text-2xl font-bold text-gray-900">Daily Eco-Quiz</h2>
+            <h2 className="text-2xl font-bold text-text-primary">Daily Eco-Quiz</h2>
             <p className="text-sm text-text-secondary">Test your knowledge & earn points</p>
           </div>
-          <button onClick={onClose} className="p-2 hover:bg-gray-100 rounded-full transition-colors">
+          <button onClick={onClose} className="p-2 hover:bg-primary/5 rounded-full transition-colors">
             <X size={24} />
           </button>
         </div>
@@ -177,14 +177,14 @@ export default function QuizModal({ isOpen, onClose, onComplete }: QuizModalProp
             </div>
           ) : result ? (
             <div className="text-center py-8 space-y-6">
-              <div className="inline-flex p-6 bg-yellow-50 rounded-full text-yellow-500">
+              <div className="inline-flex p-6 bg-yellow-500/10 rounded-full text-yellow-500">
                 <Trophy size={64} />
               </div>
               <div className="space-y-2">
-                <h3 className="text-3xl font-bold">Great Job!</h3>
+                <h3 className="text-3xl font-bold text-text-primary">Great Job!</h3>
                 <p className="text-text-secondary">You've completed today's quiz.</p>
               </div>
-              <div className="bg-gray-50 p-6 rounded-3xl inline-block min-w-[200px]">
+              <div className="bg-primary/5 p-6 rounded-3xl inline-block min-w-[200px]">
                 <div className="text-sm text-text-secondary uppercase font-bold tracking-wider mb-1">Your Score</div>
                 <div className="text-5xl font-black text-primary">{result.score}<span className="text-2xl text-gray-300">/{result.total}</span></div>
               </div>
@@ -213,7 +213,7 @@ export default function QuizModal({ isOpen, onClose, onComplete }: QuizModalProp
             <div className="space-y-8">
               {/* Progress */}
               <div className="flex items-center gap-4">
-                <div className="flex-1 h-3 bg-gray-100 rounded-full overflow-hidden">
+                <div className="flex-1 h-3 bg-primary/5 rounded-full overflow-hidden">
                   <motion.div 
                     className="h-full bg-primary"
                     initial={{ width: 0 }}
@@ -229,13 +229,13 @@ export default function QuizModal({ isOpen, onClose, onComplete }: QuizModalProp
               <div className="space-y-6">
                 <div className="space-y-2">
                   <span className={`text-[10px] font-bold uppercase px-2 py-0.5 rounded-full ${
-                    questions[currentStep].difficulty === 'easy' ? 'bg-green-100 text-green-700' :
-                    questions[currentStep].difficulty === 'medium' ? 'bg-yellow-100 text-yellow-700' :
-                    'bg-red-100 text-red-700'
+                    questions[currentStep].difficulty === 'easy' ? 'bg-green-500/10 text-green-500' :
+                    questions[currentStep].difficulty === 'medium' ? 'bg-yellow-500/10 text-yellow-500' :
+                    'bg-red-500/10 text-red-500'
                   }`}>
                     {questions[currentStep].difficulty}
                   </span>
-                  <h3 className="text-xl font-bold text-gray-900 leading-tight">
+                  <h3 className="text-xl font-bold text-text-primary leading-tight">
                     {questions[currentStep].question}
                   </h3>
                 </div>
@@ -248,14 +248,14 @@ export default function QuizModal({ isOpen, onClose, onComplete }: QuizModalProp
                       className={`p-4 text-left rounded-2xl border-2 transition-all font-medium flex items-center justify-between group ${
                         selectedAnswers[currentStep] === index
                           ? "border-primary bg-primary/5 text-primary"
-                          : "border-gray-100 hover:border-primary/30 hover:bg-gray-50"
+                          : "border-primary/5 hover:border-primary/30 hover:bg-primary/5"
                       }`}
                     >
                       <span>{option}</span>
                       <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all ${
                         selectedAnswers[currentStep] === index
                           ? "border-primary bg-primary text-white"
-                          : "border-gray-200 group-hover:border-primary/30"
+                          : "border-primary/10 group-hover:border-primary/30"
                       }`}>
                         {selectedAnswers[currentStep] === index && <CheckCircle2 size={14} />}
                       </div>

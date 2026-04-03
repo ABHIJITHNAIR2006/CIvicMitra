@@ -105,13 +105,13 @@ export default function ChallengeModal({ challenge, onClose }: ChallengeModalPro
         initial={{ opacity: 0, scale: 0.9, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
         exit={{ opacity: 0, scale: 0.9, y: 20 }}
-        className="relative w-full max-w-2xl bg-white rounded-3xl overflow-hidden shadow-2xl"
+        className="relative w-full max-w-2xl bg-card rounded-3xl overflow-hidden shadow-2xl"
       >
         <div className="h-48 relative">
           <img src={challenge.bannerImageUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
           <button 
             onClick={onClose}
-            className="absolute top-4 right-4 w-10 h-10 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/40 transition-all"
+            className="absolute top-4 right-4 w-10 h-10 bg-card/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-card/40 transition-all"
           >
             <X size={24} />
           </button>
@@ -120,7 +120,7 @@ export default function ChallengeModal({ challenge, onClose }: ChallengeModalPro
         <div className="p-8">
           <div className="flex items-center gap-3 mb-4">
             <span className="text-4xl">{challenge.iconEmoji}</span>
-            <h2 className="text-3xl font-display">{challenge.title}</h2>
+            <h2 className="text-3xl font-display text-text-primary">{challenge.title}</h2>
           </div>
 
           <div className="space-y-6">
@@ -187,10 +187,10 @@ export default function ChallengeModal({ challenge, onClose }: ChallengeModalPro
 
             {status === "SUCCESS" && (
               <div className="text-center py-12 space-y-4">
-                <div className="w-16 h-16 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto">
+                <div className="w-16 h-16 bg-green-500/10 text-green-500 rounded-full flex items-center justify-center mx-auto">
                   <CheckCircle2 size={40} />
                 </div>
-                <p className="text-2xl font-bold">Proof Verified! 🎉</p>
+                <p className="text-2xl font-bold text-text-primary">Proof Verified! 🎉</p>
                 <p className="text-text-secondary">You've earned +{challenge.points} points and kept your streak alive.</p>
                 <button onClick={onClose} className="px-8 py-3 bg-primary text-white rounded-xl font-bold">Back to Challenges</button>
               </div>

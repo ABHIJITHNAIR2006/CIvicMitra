@@ -14,7 +14,7 @@ export default function ChallengeCard({ challenge, onClick, variant = "grid" }: 
       <motion.div 
         whileHover={{ y: -4 }}
         onClick={onClick}
-        className="bg-white p-6 rounded-3xl card-shadow flex gap-4 cursor-pointer"
+        className="bg-card p-6 rounded-3xl card-shadow flex gap-4 cursor-pointer"
       >
         <div className="w-16 h-16 rounded-2xl bg-primary/5 flex items-center justify-center text-3xl shrink-0">
           {challenge.iconEmoji}
@@ -40,7 +40,7 @@ export default function ChallengeCard({ challenge, onClick, variant = "grid" }: 
     <motion.div 
       whileHover={{ y: -4 }}
       onClick={onClick}
-      className="bg-white rounded-3xl card-shadow overflow-hidden cursor-pointer flex flex-col"
+      className="bg-card rounded-3xl card-shadow overflow-hidden cursor-pointer flex flex-col"
     >
       <div className="h-40 relative overflow-hidden">
         <img 
@@ -48,7 +48,7 @@ export default function ChallengeCard({ challenge, onClick, variant = "grid" }: 
           className="w-full h-full object-cover" 
           referrerPolicy="no-referrer"
         />
-        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-primary">
+        <div className="absolute top-4 left-4 bg-card/90 backdrop-blur-sm px-3 py-1 rounded-full text-xs font-bold text-primary">
           {challenge.category}
         </div>
         <div className="absolute top-4 right-4 bg-accent text-white px-3 py-1 rounded-full text-xs font-bold">

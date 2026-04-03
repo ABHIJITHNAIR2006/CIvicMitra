@@ -161,7 +161,7 @@ export default function AdminChallengeManager() {
           <div className="flex gap-2">
             <button 
               onClick={fetchChallenges}
-              className="p-3 bg-white border border-gray-200 rounded-xl hover:bg-gray-50 transition-all"
+              className="p-3 bg-card border border-primary/10 rounded-xl hover:bg-primary/5 transition-all text-text-primary"
               title="Refresh"
             >
               <RefreshCw size={20} />
@@ -177,10 +177,10 @@ export default function AdminChallengeManager() {
         </div>
 
         {isAdding && (
-          <div className="bg-white p-8 rounded-[2.5rem] card-shadow space-y-6 border-2 border-primary/20">
+          <div className="bg-card p-8 rounded-[2.5rem] card-shadow space-y-6 border-2 border-primary/20">
             <div className="flex items-center justify-between">
-              <h3 className="text-2xl font-bold">{editingId ? "Edit Challenge" : "New Challenge"}</h3>
-              <button onClick={resetForm} className="p-2 hover:bg-gray-100 rounded-full">
+              <h3 className="text-2xl font-bold text-text-primary">{editingId ? "Edit Challenge" : "New Challenge"}</h3>
+              <button onClick={resetForm} className="p-2 hover:bg-primary/5 rounded-full text-text-secondary">
                 <X size={24} />
               </button>
             </div>
@@ -194,7 +194,7 @@ export default function AdminChallengeManager() {
                   value={formData.challengeId}
                   onChange={e => setFormData({ ...formData, challengeId: e.target.value })}
                   placeholder="e.g. daily-water-bottle"
-                  className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-white transition-all outline-none font-medium"
+                  className="w-full p-4 bg-primary/5 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-card transition-all outline-none font-medium text-text-primary"
                 />
               </div>
               <div className="space-y-2">
@@ -204,7 +204,7 @@ export default function AdminChallengeManager() {
                   value={formData.title}
                   onChange={e => setFormData({ ...formData, title: e.target.value })}
                   placeholder="Challenge Title"
-                  className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-white transition-all outline-none font-medium"
+                  className="w-full p-4 bg-primary/5 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-card transition-all outline-none font-medium text-text-primary"
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
@@ -214,7 +214,7 @@ export default function AdminChallengeManager() {
                   value={formData.shortDescription}
                   onChange={e => setFormData({ ...formData, shortDescription: e.target.value })}
                   placeholder="Appears on cards"
-                  className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-white transition-all outline-none font-medium"
+                  className="w-full p-4 bg-primary/5 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-card transition-all outline-none font-medium text-text-primary"
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
@@ -224,7 +224,7 @@ export default function AdminChallengeManager() {
                   onChange={e => setFormData({ ...formData, description: e.target.value })}
                   placeholder="Detailed instructions and impact"
                   rows={3}
-                  className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-white transition-all outline-none font-medium resize-none"
+                  className="w-full p-4 bg-primary/5 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-card transition-all outline-none font-medium resize-none text-text-primary"
                 />
               </div>
               <div className="space-y-2">
@@ -232,9 +232,9 @@ export default function AdminChallengeManager() {
                 <select 
                   value={formData.category}
                   onChange={e => setFormData({ ...formData, category: e.target.value as Category })}
-                  className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-white transition-all outline-none font-medium"
+                  className="w-full p-4 bg-primary/5 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-card transition-all outline-none font-medium text-text-primary"
                 >
-                  {Object.values(Category).map(c => <option key={c} value={c}>{c}</option>)}
+                  {Object.values(Category).map(c => <option key={c} value={c} className="bg-card">{c}</option>)}
                 </select>
               </div>
               <div className="space-y-2">
@@ -242,9 +242,9 @@ export default function AdminChallengeManager() {
                 <select 
                   value={formData.difficulty}
                   onChange={e => setFormData({ ...formData, difficulty: e.target.value as Difficulty })}
-                  className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-white transition-all outline-none font-medium"
+                  className="w-full p-4 bg-primary/5 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-card transition-all outline-none font-medium text-text-primary"
                 >
-                  {Object.values(Difficulty).map(d => <option key={d} value={d}>{d}</option>)}
+                  {Object.values(Difficulty).map(d => <option key={d} value={d} className="bg-card">{d}</option>)}
                 </select>
               </div>
               <div className="space-y-2">
@@ -253,7 +253,7 @@ export default function AdminChallengeManager() {
                   type="number"
                   value={formData.points}
                   onChange={e => setFormData({ ...formData, points: parseInt(e.target.value) })}
-                  className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-white transition-all outline-none font-medium"
+                  className="w-full p-4 bg-primary/5 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-card transition-all outline-none font-medium text-text-primary"
                 />
               </div>
               <div className="space-y-2">
@@ -262,7 +262,7 @@ export default function AdminChallengeManager() {
                   type="text"
                   value={formData.iconEmoji}
                   onChange={e => setFormData({ ...formData, iconEmoji: e.target.value })}
-                  className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-white transition-all outline-none font-medium"
+                  className="w-full p-4 bg-primary/5 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-card transition-all outline-none font-medium text-text-primary"
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
@@ -271,7 +271,7 @@ export default function AdminChallengeManager() {
                   type="text"
                   value={formData.bannerImageUrl}
                   onChange={e => setFormData({ ...formData, bannerImageUrl: e.target.value })}
-                  className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-white transition-all outline-none font-medium"
+                  className="w-full p-4 bg-primary/5 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-card transition-all outline-none font-medium text-text-primary"
                 />
               </div>
               <div className="space-y-2 md:col-span-2">
@@ -281,7 +281,7 @@ export default function AdminChallengeManager() {
                   value={formData.proofInstructions}
                   onChange={e => setFormData({ ...formData, proofInstructions: e.target.value })}
                   placeholder="What should the user photograph?"
-                  className="w-full p-4 bg-gray-50 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-white transition-all outline-none font-medium"
+                  className="w-full p-4 bg-primary/5 rounded-2xl border-2 border-transparent focus:border-primary focus:bg-card transition-all outline-none font-medium text-text-primary"
                 />
               </div>
               <div className="flex items-center gap-8 md:col-span-2">
@@ -290,18 +290,18 @@ export default function AdminChallengeManager() {
                     type="checkbox"
                     checked={formData.isDaily}
                     onChange={e => setFormData({ ...formData, isDaily: e.target.checked })}
-                    className="w-6 h-6 rounded-lg text-primary focus:ring-primary border-gray-300"
+                    className="w-6 h-6 rounded-lg text-primary focus:ring-primary border-primary/20 bg-primary/5"
                   />
-                  <span className="font-bold text-gray-700">Daily Challenge</span>
+                  <span className="font-bold text-text-primary">Daily Challenge</span>
                 </label>
                 <label className="flex items-center gap-3 cursor-pointer">
                   <input 
                     type="checkbox"
                     checked={formData.isActive}
                     onChange={e => setFormData({ ...formData, isActive: e.target.checked })}
-                    className="w-6 h-6 rounded-lg text-primary focus:ring-primary border-gray-300"
+                    className="w-6 h-6 rounded-lg text-primary focus:ring-primary border-primary/20 bg-primary/5"
                   />
-                  <span className="font-bold text-gray-700">Active</span>
+                  <span className="font-bold text-text-primary">Active</span>
                 </label>
               </div>
             </div>
@@ -316,7 +316,7 @@ export default function AdminChallengeManager() {
               </button>
               <button 
                 onClick={resetForm}
-                className="px-8 py-4 bg-gray-100 text-gray-600 rounded-2xl font-bold text-lg hover:bg-gray-200 transition-all"
+                className="px-8 py-4 bg-primary/10 text-text-primary rounded-2xl font-bold text-lg hover:bg-primary/20 transition-all"
               >
                 Cancel
               </button>
@@ -326,17 +326,17 @@ export default function AdminChallengeManager() {
 
         <div className="grid grid-cols-1 gap-4">
           {challenges.map((c) => (
-            <div key={c.challengeId} className="bg-white p-6 rounded-3xl card-shadow flex items-center justify-between gap-6 group hover:border-primary/30 border-2 border-transparent transition-all">
+            <div key={c.challengeId} className="bg-card p-6 rounded-3xl card-shadow flex items-center justify-between gap-6 group hover:border-primary/30 border-2 border-transparent transition-all">
               <div className="flex items-center gap-6">
-                <div className="w-16 h-16 bg-gray-50 rounded-2xl flex items-center justify-center text-3xl">
+                <div className="w-16 h-16 bg-primary/5 rounded-2xl flex items-center justify-center text-3xl">
                   {c.iconEmoji}
                 </div>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <h3 className="text-xl font-bold">{c.title}</h3>
+                    <h3 className="text-xl font-bold text-text-primary">{c.title}</h3>
                     <span className={cn(
                       "text-[10px] font-bold uppercase px-2 py-0.5 rounded-full",
-                      c.isActive ? "bg-green-100 text-green-700" : "bg-gray-100 text-gray-500"
+                      c.isActive ? "bg-green-500/10 text-green-500" : "bg-primary/10 text-text-secondary"
                     )}>
                       {c.isActive ? "Active" : "Inactive"}
                     </span>
@@ -351,14 +351,14 @@ export default function AdminChallengeManager() {
               <div className="flex gap-2">
                 <button 
                   onClick={() => startEdit(c)}
-                  className="p-3 bg-blue-50 text-blue-600 rounded-xl hover:bg-blue-600 hover:text-white transition-all"
+                  className="p-3 bg-blue-500/10 text-blue-500 rounded-xl hover:bg-blue-500 hover:text-white transition-all"
                   title="Edit"
                 >
                   <Edit2 size={20} />
                 </button>
                 <button 
                   onClick={() => handleDelete(c.challengeId)}
-                  className="p-3 bg-red-50 text-red-600 rounded-xl hover:bg-red-600 hover:text-white transition-all"
+                  className="p-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all"
                   title="Delete"
                 >
                   <Trash2 size={20} />
@@ -367,7 +367,7 @@ export default function AdminChallengeManager() {
             </div>
           ))}
           {challenges.length === 0 && (
-            <div className="p-12 text-center bg-white rounded-3xl border-2 border-dashed border-gray-200 text-text-secondary">
+            <div className="p-12 text-center bg-card rounded-3xl border-2 border-dashed border-primary/10 text-text-secondary">
               No challenges found. Create your first one!
             </div>
           )}

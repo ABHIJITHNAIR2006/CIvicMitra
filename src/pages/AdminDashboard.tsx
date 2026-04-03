@@ -272,7 +272,22 @@ export default function AdminDashboard() {
 
         {/* Quick Actions */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <Link to="/admin/challenges" className="bg-white p-8 rounded-[2.5rem] card-shadow flex items-center justify-between group hover:bg-accent transition-all">
+          <Link to="/admin/quiz" className="bg-card p-8 rounded-[2.5rem] card-shadow flex items-center justify-between group hover:bg-primary transition-all">
+            <div className="flex items-center gap-6">
+              <div className="w-16 h-16 bg-primary/10 rounded-[1.5rem] flex items-center justify-center text-primary group-hover:bg-white/20 group-hover:text-white transition-all">
+                <Brain size={32} />
+              </div>
+              <div>
+                <h3 className="text-2xl font-bold group-hover:text-white transition-all">Quiz Manager</h3>
+                <p className="text-text-secondary group-hover:text-white/70 transition-all">Manage daily quiz questions and pool.</p>
+              </div>
+            </div>
+            <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center text-text-secondary group-hover:bg-white/20 group-hover:text-white transition-all">
+              <Plus size={24} />
+            </div>
+          </Link>
+
+          <Link to="/admin/challenges" className="bg-card p-8 rounded-[2.5rem] card-shadow flex items-center justify-between group hover:bg-accent transition-all">
             <div className="flex items-center gap-6">
               <div className="w-16 h-16 bg-accent/10 rounded-[1.5rem] flex items-center justify-center text-accent group-hover:bg-white/20 group-hover:text-white transition-all">
                 <Trophy size={32} />
@@ -282,27 +297,15 @@ export default function AdminDashboard() {
                 <p className="text-text-secondary group-hover:text-white/70 transition-all">Create and edit eco-challenges.</p>
               </div>
             </div>
-            <div className="w-12 h-12 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 group-hover:bg-white/20 group-hover:text-white transition-all">
+            <div className="w-12 h-12 rounded-full bg-primary/5 flex items-center justify-center text-text-secondary group-hover:bg-white/20 group-hover:text-white transition-all">
               <Plus size={24} />
             </div>
           </Link>
-
-          <div className="bg-white p-8 rounded-[2.5rem] card-shadow flex items-center justify-between group border border-dashed border-gray-200 opacity-60">
-            <div className="flex items-center gap-6">
-              <div className="w-16 h-16 bg-gray-100 rounded-[1.5rem] flex items-center justify-center text-gray-400">
-                <Users size={32} />
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold text-gray-400">User Management</h3>
-                <p className="text-text-secondary">Manage user profiles and roles (Coming Soon).</p>
-              </div>
-            </div>
-          </div>
         </div>
 
         {/* Pending Verifications */}
-        <section className="bg-white rounded-3xl card-shadow overflow-hidden">
-          <div className="p-6 border-b border-gray-100 flex items-center justify-between">
+        <section className="bg-card rounded-3xl card-shadow overflow-hidden">
+          <div className="p-6 border-b border-primary/10 flex items-center justify-between">
             <h3 className="text-xl font-bold">Pending Verifications</h3>
             <span className="text-sm font-bold text-primary bg-primary/10 px-3 py-1 rounded-full">
               {pendingCompletions.length} New
@@ -310,7 +313,7 @@ export default function AdminDashboard() {
           </div>
           <div className="overflow-x-auto">
             <table className="w-full text-left">
-              <thead className="bg-gray-50 text-xs font-bold text-text-secondary uppercase tracking-widest">
+              <thead className="bg-primary/5 text-xs font-bold text-text-secondary uppercase tracking-widest">
                 <tr>
                   <th className="px-6 py-4">User</th>
                   <th className="px-6 py-4">Challenge</th>
@@ -319,12 +322,12 @@ export default function AdminDashboard() {
                   <th className="px-6 py-4">Actions</th>
                 </tr>
               </thead>
-              <tbody className="divide-y divide-gray-50">
+              <tbody className="divide-y divide-primary/10">
                 {pendingCompletions.map((comp) => (
-                  <tr key={comp.id} className="hover:bg-gray-50 transition-colors">
+                  <tr key={comp.id} className="hover:bg-primary/5 transition-colors">
                     <td className="px-6 py-4">
                       <div className="flex items-center gap-3">
-                        <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden">
+                        <div className="w-8 h-8 rounded-full bg-primary/10 overflow-hidden">
                           {usersMap[comp.userId]?.avatarUrl && <img src={usersMap[comp.userId].avatarUrl} className="w-full h-full object-cover" />}
                         </div>
                         <div>
@@ -339,7 +342,7 @@ export default function AdminDashboard() {
                     </td>
                     <td className="px-6 py-4">
                       <div 
-                        className="w-12 h-12 rounded-lg bg-gray-100 overflow-hidden cursor-pointer relative group"
+                        className="w-12 h-12 rounded-lg bg-primary/5 overflow-hidden cursor-pointer relative group"
                         onClick={() => setSelectedProof(comp.proofUrl)}
                       >
                         <img src={comp.proofUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
@@ -351,7 +354,7 @@ export default function AdminDashboard() {
                     <td className="px-6 py-4">
                       <span className={cn(
                         "px-2 py-1 rounded-full text-xs font-bold",
-                        comp.aiVerificationScore > 0.7 ? "bg-green-100 text-green-700" : "bg-orange-100 text-orange-700"
+                        comp.aiVerificationScore > 0.7 ? "bg-green-500/10 text-green-500" : "bg-orange-500/10 text-orange-500"
                       )}>
                         {(comp.aiVerificationScore * 100).toFixed(0)}% AI
                       </span>
@@ -360,14 +363,14 @@ export default function AdminDashboard() {
                       <div className="flex gap-2">
                         <button 
                           onClick={() => handleVerify(comp, VerificationStatus.VERIFIED)}
-                          className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-600 hover:text-white transition-all"
+                          className="p-2 bg-green-500/10 text-green-500 rounded-lg hover:bg-green-500 hover:text-white transition-all"
                           title="Approve"
                         >
                           <CheckCircle2 size={18} />
                         </button>
                         <button 
                           onClick={() => handleVerify(comp, VerificationStatus.REJECTED)}
-                          className="p-2 bg-red-100 text-red-600 rounded-lg hover:bg-red-600 hover:text-white transition-all"
+                          className="p-2 bg-red-500/10 text-red-500 rounded-lg hover:bg-red-500 hover:text-white transition-all"
                           title="Reject"
                         >
                           <XCircle size={18} />
@@ -404,13 +407,13 @@ export default function AdminDashboard() {
 
 function AdminStatCard({ icon, label, value, color }: any) {
   return (
-    <div className="bg-white p-6 rounded-3xl card-shadow flex items-center gap-4">
+    <div className="bg-card p-6 rounded-3xl card-shadow flex items-center gap-4">
       <div className={cn("w-14 h-14 rounded-2xl flex items-center justify-center text-white", color)}>
         {icon}
       </div>
       <div>
         <p className="text-sm text-text-secondary font-bold uppercase tracking-wider">{label}</p>
-        <p className="text-3xl font-display font-bold">{value.toLocaleString()}</p>
+        <p className="text-3xl font-display font-bold text-text-primary">{value.toLocaleString()}</p>
       </div>
     </div>
   );

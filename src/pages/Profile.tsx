@@ -56,10 +56,10 @@ export default function Profile() {
     <DashboardLayout>
       <div className="space-y-8">
         {/* Profile Header */}
-        <div className="bg-white rounded-3xl card-shadow overflow-hidden">
+        <div className="bg-card rounded-3xl card-shadow overflow-hidden border border-primary/10">
           <div className="h-48 bg-gradient-to-r from-primary to-primary-light relative">
-            <div className="absolute -bottom-16 left-8 p-2 bg-white rounded-full">
-              <div className="w-32 h-32 rounded-full bg-gray-100 overflow-hidden border-4 border-white">
+            <div className="absolute -bottom-16 left-8 p-2 bg-card rounded-full">
+              <div className="w-32 h-32 rounded-full bg-primary/5 overflow-hidden border-4 border-card">
                 <img 
                   src={profile?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.username}`} 
                   className="w-full h-full object-cover" 
@@ -69,7 +69,7 @@ export default function Profile() {
           </div>
           <div className="pt-20 pb-8 px-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
             <div>
-              <h1 className="text-4xl font-display">{profile?.fullName}</h1>
+              <h1 className="text-4xl font-display text-text-primary">{profile?.fullName}</h1>
               <p className="text-text-secondary mb-4">@{profile?.username}</p>
               <div className="flex flex-wrap gap-4 text-sm text-text-secondary">
                 <div className="flex items-center gap-1">
@@ -86,7 +86,7 @@ export default function Profile() {
               <button className="px-6 py-2 bg-primary text-white rounded-xl font-bold hover:bg-primary-light transition-colors">
                 Edit Profile
               </button>
-              <button className="px-6 py-2 bg-gray-100 text-text-primary rounded-xl font-bold hover:bg-gray-200 transition-colors">
+              <button className="px-6 py-2 bg-primary/5 text-text-primary rounded-xl font-bold hover:bg-primary/10 transition-colors border border-primary/10">
                 Share
               </button>
             </div>
@@ -98,12 +98,12 @@ export default function Profile() {
           <StatCard icon={<Star className="text-primary" />} label="Total Points" value={(profile?.points || 0) + totalSubmissionPoints} />
           <StatCard icon={<Flame className="text-accent" />} label="Current Streak" value={profile?.currentStreak || 0} />
           <StatCard icon={<Award className="text-primary-light" />} label="Badges" value={badges.length} />
-          <StatCard icon={<Grid className="text-gray-400" />} label="Level" value={profile?.level || 1} />
+          <StatCard icon={<Grid className="text-text-secondary" />} label="Level" value={profile?.level || 1} />
         </div>
 
         {/* Tabs */}
         <div className="space-y-6">
-          <div className="flex border-b border-gray-100">
+          <div className="flex border-b border-primary/10">
             {["ACTIVITY", "BADGES", "GALLERY"].map(tab => (
               <button
                 key={tab}
@@ -125,23 +125,23 @@ export default function Profile() {
             {activeTab === "ACTIVITY" && (
               <div className="space-y-4">
                 {completions.length > 0 ? completions.map(comp => (
-                  <div key={comp.id} className="bg-white p-6 rounded-3xl card-shadow flex items-center justify-between">
+                  <div key={comp.id} className="bg-card p-6 rounded-3xl card-shadow flex items-center justify-between border border-primary/10">
                     <div className="flex items-center gap-4">
-                      <div className="w-16 h-16 rounded-2xl bg-gray-100 overflow-hidden">
+                      <div className="w-16 h-16 rounded-2xl bg-primary/5 overflow-hidden">
                         <img src={comp.proofUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                       </div>
                       <div>
-                        <h4 className="font-bold">Challenge Completed</h4>
+                        <h4 className="font-bold text-text-primary">Challenge Completed</h4>
                         <p className="text-sm text-text-secondary">{new Date(comp.submittedAt).toLocaleString()}</p>
                       </div>
                     </div>
                     <div className="text-right">
                       <span className="text-primary font-bold">+{comp.pointsAwarded} pts</span>
-                      <p className="text-xs text-green-600 font-bold uppercase tracking-wider mt-1">Verified</p>
+                      <p className="text-xs text-green-500 font-bold uppercase tracking-wider mt-1">Verified</p>
                     </div>
                   </div>
                 )) : (
-                  <div className="text-center py-20 bg-white rounded-3xl card-shadow">
+                  <div className="text-center py-20 bg-card rounded-3xl card-shadow border border-primary/10">
                     <p className="text-text-secondary">No activity yet. Start a challenge!</p>
                   </div>
                 )}
@@ -151,14 +151,14 @@ export default function Profile() {
             {activeTab === "BADGES" && (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
                 {badges.length > 0 ? badges.map(badge => (
-                  <div key={badge.id} className="bg-white p-6 rounded-3xl card-shadow text-center space-y-3">
+                  <div key={badge.id} className="bg-card p-6 rounded-3xl card-shadow text-center space-y-3 border border-primary/10">
                     <div className="w-16 h-16 bg-primary/5 rounded-full flex items-center justify-center mx-auto text-3xl">
                       {badge.badgeIconUrl}
                     </div>
-                    <p className="font-bold text-sm">{badge.badgeName}</p>
+                    <p className="font-bold text-sm text-text-primary">{badge.badgeName}</p>
                   </div>
                 )) : (
-                  <div className="col-span-full text-center py-20 bg-white rounded-3xl card-shadow">
+                  <div className="col-span-full text-center py-20 bg-card rounded-3xl card-shadow border border-primary/10">
                     <p className="text-text-secondary">No badges earned yet. Keep going!</p>
                   </div>
                 )}
@@ -168,7 +168,7 @@ export default function Profile() {
             {activeTab === "GALLERY" && (
               <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                 {completions.map(comp => (
-                  <div key={comp.id} className="aspect-square rounded-2xl overflow-hidden card-shadow">
+                  <div key={comp.id} className="aspect-square rounded-2xl overflow-hidden card-shadow border border-primary/10">
                     <img src={comp.proofUrl} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                   </div>
                 ))}
@@ -183,13 +183,13 @@ export default function Profile() {
 
 function StatCard({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | number }) {
   return (
-    <div className="bg-white p-6 rounded-3xl card-shadow flex items-center gap-4">
-      <div className="w-12 h-12 rounded-2xl bg-gray-50 flex items-center justify-center">
+    <div className="bg-card p-6 rounded-3xl card-shadow flex items-center gap-4 border border-primary/10">
+      <div className="w-12 h-12 rounded-2xl bg-primary/5 flex items-center justify-center">
         {icon}
       </div>
       <div>
         <p className="text-xs text-text-secondary font-bold uppercase tracking-wider">{label}</p>
-        <p className="text-2xl font-display font-bold">{value}</p>
+        <p className="text-2xl font-display font-bold text-text-primary">{value}</p>
       </div>
     </div>
   );

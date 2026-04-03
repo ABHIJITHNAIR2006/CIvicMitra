@@ -54,14 +54,14 @@ export default function Leaderboard() {
 
         {/* Tabs */}
         <div className="flex justify-center">
-          <div className="bg-white p-1 rounded-2xl card-shadow flex gap-1">
+          <div className="bg-card p-1 rounded-2xl card-shadow flex gap-1 border border-primary/10">
             {["WEEKLY", "MONTHLY", "ALL_TIME"].map(tab => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
                 className={cn(
                   "px-6 py-2 rounded-xl font-bold transition-all",
-                  activeTab === tab ? "bg-primary text-white" : "text-text-secondary hover:bg-gray-50"
+                  activeTab === tab ? "bg-primary text-white" : "text-text-secondary hover:bg-primary/5"
                 )}
               >
                 {tab.replace('_', ' ')}
@@ -80,8 +80,8 @@ export default function Leaderboard() {
         )}
 
         {/* Table */}
-        <div className="bg-white rounded-3xl card-shadow overflow-hidden">
-          <div className="grid grid-cols-12 gap-4 p-6 bg-gray-50 text-xs font-bold text-text-secondary uppercase tracking-widest">
+        <div className="bg-card rounded-3xl card-shadow overflow-hidden border border-primary/10">
+          <div className="grid grid-cols-12 gap-4 p-6 bg-primary/5 text-xs font-bold text-text-secondary uppercase tracking-widest">
             <div className="col-span-1">Rank</div>
             <div className="col-span-7 md:col-span-8">User</div>
             <div className="col-span-2 md:col-span-1 text-right">Streak</div>
@@ -90,10 +90,10 @@ export default function Leaderboard() {
 
           {loading ? (
             <div className="p-12 text-center animate-pulse space-y-4">
-              {[1, 2, 3, 4, 5].map(i => <div key={i} className="h-12 bg-gray-100 rounded-xl" />)}
+              {[1, 2, 3, 4, 5].map(i => <div key={i} className="h-12 bg-primary/5 rounded-xl" />)}
             </div>
           ) : (
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y divide-primary/5">
               {users.map((user, i) => (
                 <motion.div 
                   initial={{ opacity: 0, y: 10 }}
@@ -101,19 +101,19 @@ export default function Leaderboard() {
                   transition={{ delay: i * 0.05 }}
                   key={user.uid} 
                   className={cn(
-                    "grid grid-cols-12 gap-4 p-6 items-center hover:bg-gray-50 transition-colors",
-                    user.uid === auth.currentUser?.uid && "bg-primary/5"
+                    "grid grid-cols-12 gap-4 p-6 items-center hover:bg-primary/5 transition-colors",
+                    user.uid === auth.currentUser?.uid && "bg-primary/10"
                   )}
                 >
                   <div className="col-span-1 font-display font-bold text-lg text-text-secondary">
                     #{i + 1}
                   </div>
                   <div className="col-span-7 md:col-span-8 flex items-center gap-3">
-                    <div className="w-10 h-10 rounded-full bg-gray-200 overflow-hidden">
+                    <div className="w-10 h-10 rounded-full bg-primary/10 overflow-hidden">
                       <img src={user.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${user.username}`} className="w-full h-full object-cover" />
                     </div>
                     <div>
-                      <p className="font-bold">{user.fullName}</p>
+                      <p className="font-bold text-text-primary">{user.fullName}</p>
                       <p className="text-xs text-text-secondary">@{user.username}</p>
                     </div>
                   </div>

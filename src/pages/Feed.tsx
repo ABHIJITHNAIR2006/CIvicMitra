@@ -84,28 +84,28 @@ export default function Feed() {
     <DashboardLayout>
       <div className="max-w-2xl mx-auto space-y-8">
         <div className="flex items-center justify-between">
-          <h1 className="text-4xl">Community Feed</h1>
-          <div className="flex gap-2 bg-white p-1 rounded-xl card-shadow">
+          <h1 className="text-4xl text-text-primary">Community Feed</h1>
+          <div className="flex gap-2 bg-card p-1 rounded-xl card-shadow border border-primary/10">
             <button className="px-4 py-2 bg-primary text-white rounded-lg font-bold">Global</button>
-            <button className="px-4 py-2 text-text-secondary hover:bg-gray-50 rounded-lg font-bold">Following</button>
+            <button className="px-4 py-2 text-text-secondary hover:bg-primary/5 rounded-lg font-bold">Following</button>
           </div>
         </div>
 
         {/* Create Post */}
-        <div className="bg-white rounded-3xl card-shadow p-6">
+        <div className="bg-card rounded-3xl card-shadow p-6 border border-primary/10">
           <form onSubmit={handleCreatePost} className="space-y-4">
             <div className="flex gap-4">
-              <div className="w-12 h-12 rounded-full bg-gray-100 overflow-hidden flex-shrink-0">
+              <div className="w-12 h-12 rounded-full bg-primary/5 overflow-hidden flex-shrink-0">
                 <img src={auth.currentUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${auth.currentUser?.uid}`} className="w-full h-full object-cover" />
               </div>
               <textarea 
                 value={newPost}
                 onChange={(e) => setNewPost(e.target.value)}
                 placeholder="Share your eco-journey with the community..."
-                className="w-full bg-gray-50 border border-gray-100 rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary resize-none min-h-[100px] transition-all"
+                className="w-full bg-primary/5 border border-primary/10 rounded-2xl p-4 outline-none focus:ring-2 focus:ring-primary resize-none min-h-[100px] transition-all text-text-primary"
               />
             </div>
-            <div className="flex items-center justify-between pt-2 border-t border-gray-50">
+            <div className="flex items-center justify-between pt-2 border-t border-primary/5">
               <button type="button" className="flex items-center gap-2 text-text-secondary hover:text-primary font-bold transition-colors">
                 <ImageIcon size={20} />
                 <span>Add Photo</span>
@@ -123,7 +123,7 @@ export default function Feed() {
         </div>
 
         {loading ? (
-          [1, 2, 3].map(i => <div key={i} className="h-96 bg-gray-200 rounded-3xl animate-pulse" />)
+          [1, 2, 3].map(i => <div key={i} className="h-96 bg-primary/5 rounded-3xl animate-pulse" />)
         ) : (
           <div className="space-y-8">
             {posts.map((post) => (
@@ -143,20 +143,20 @@ const PostCard = memo(({ post }: { post: any }) => {
     <motion.div 
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="bg-white rounded-3xl card-shadow overflow-hidden"
+      className="bg-card rounded-3xl card-shadow overflow-hidden border border-primary/10"
     >
       {/* Post Header */}
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-full bg-gray-100 overflow-hidden">
+          <div className="w-10 h-10 rounded-full bg-primary/5 overflow-hidden">
             <img src={post.userAvatar} className="w-full h-full object-cover" loading="lazy" />
           </div>
           <div>
-            <p className="font-bold">@{post.username}</p>
+            <p className="font-bold text-text-primary">@{post.username}</p>
             <p className="text-xs text-text-secondary">{new Date(post.submittedAt).toLocaleString()}</p>
           </div>
         </div>
-        <button className="p-2 text-text-secondary hover:bg-gray-50 rounded-full">
+        <button className="p-2 text-text-secondary hover:bg-primary/5 rounded-full">
           <MoreHorizontal size={20} />
         </button>
       </div>
@@ -169,14 +169,14 @@ const PostCard = memo(({ post }: { post: any }) => {
       </div>
 
       {/* Post Media */}
-      <div className="aspect-square bg-gray-100 relative group">
+      <div className="aspect-square bg-primary/5 relative group">
         <img 
           src={post.proofUrl} 
           className="w-full h-full object-cover" 
           referrerPolicy="no-referrer"
           loading="lazy"
         />
-        <div className="absolute top-4 right-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-primary shadow-sm">
+        <div className="absolute top-4 right-4 bg-card/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-primary shadow-sm">
           Verified ✓
         </div>
       </div>
@@ -210,7 +210,7 @@ const PostCard = memo(({ post }: { post: any }) => {
 
         {/* Comments Preview */}
         <div className="space-y-2">
-          <p className="text-sm">
+          <p className="text-sm text-text-primary">
             <span className="font-bold">eco_warrior_2</span> Great job! Keep it up! 🌿
           </p>
           <button className="text-sm text-text-secondary font-medium hover:underline">

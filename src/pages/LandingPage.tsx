@@ -53,7 +53,7 @@ export default function LandingPage() {
             </Link>
             <Link
               to="/login"
-              className="px-10 py-4 bg-white text-primary border-2 border-primary rounded-full text-lg font-bold hover:bg-primary/5 transition-all hover:scale-105"
+              className="px-10 py-4 bg-card text-primary border-2 border-primary rounded-full text-lg font-bold hover:bg-primary/5 transition-all hover:scale-105"
             >
               Sign In
             </Link>
@@ -62,9 +62,9 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section className="py-24 px-4 bg-white">
+      <section className="py-24 px-4 bg-card border-t border-primary/5">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-4xl text-center mb-16">Why CivicMitra?</h2>
+          <h2 className="text-4xl text-center mb-16 text-text-primary">Why CivicMitra?</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <FeatureCard 
               icon={<Zap className="text-accent" />}
@@ -92,12 +92,12 @@ function FeatureCard({ icon, title, description }: { icon: React.ReactNode, titl
   return (
     <motion.div 
       whileHover={{ y: -5 }}
-      className="p-8 rounded-2xl bg-background border border-gray-100 card-shadow"
+      className="p-8 rounded-2xl bg-background border border-primary/10 card-shadow"
     >
-      <div className="w-12 h-12 rounded-xl bg-white flex items-center justify-center mb-6 shadow-sm">
+      <div className="w-12 h-12 rounded-xl bg-card flex items-center justify-center mb-6 shadow-sm border border-primary/5">
         {icon}
       </div>
-      <h3 className="text-xl mb-3">{title}</h3>
+      <h3 className="text-xl mb-3 text-text-primary">{title}</h3>
       <p className="text-text-secondary leading-relaxed">{description}</p>
     </motion.div>
   );

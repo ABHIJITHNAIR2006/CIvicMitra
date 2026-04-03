@@ -86,7 +86,7 @@ export default function Events() {
             <p className="text-text-secondary">Join local eco-initiatives and earn bonus points.</p>
           </div>
           <div className="flex gap-3">
-            <div className="bg-white p-1 rounded-xl border border-gray-100 flex shadow-sm">
+            <div className="bg-card p-1 rounded-xl border border-primary/10 flex shadow-sm">
               <button
                 onClick={() => setActiveTab('events')}
                 className={cn(
@@ -174,7 +174,7 @@ export default function Events() {
                   />
                 ))
               ) : (
-                <div className="col-span-full py-20 text-center bg-white rounded-3xl card-shadow">
+                <div className="col-span-full py-20 text-center bg-card rounded-3xl card-shadow">
                   <p className="text-text-secondary">No upcoming events found. Check back later!</p>
                 </div>
               )}
@@ -255,11 +255,11 @@ function EventCard({
   return (
     <motion.div 
       whileHover={{ y: -4 }}
-      className="bg-white rounded-3xl card-shadow overflow-hidden flex flex-col group"
+      className="bg-card rounded-3xl card-shadow overflow-hidden flex flex-col group"
     >
       <div className="h-48 relative">
         <img src={event.bannerImageUrl || `https://picsum.photos/seed/${event.id}/800/400`} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
-        <div className="absolute top-4 left-4 bg-white/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-primary">
+        <div className="absolute top-4 left-4 bg-card/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-primary">
           {event.eventType}
         </div>
         <div className="absolute top-4 right-4 bg-primary text-white px-3 py-1 rounded-full text-xs font-bold flex items-center gap-1">
@@ -270,13 +270,13 @@ function EventCard({
           <div className="absolute bottom-4 right-4 flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
             <button 
               onClick={(e) => { e.stopPropagation(); onEdit(); }}
-              className="p-2 bg-white text-primary rounded-lg shadow-lg hover:bg-primary hover:text-white transition-all"
+              className="p-2 bg-card text-primary rounded-lg shadow-lg hover:bg-primary hover:text-white transition-all"
             >
               <Edit2 size={16} />
             </button>
             <button 
               onClick={(e) => { e.stopPropagation(); onDelete(); }}
-              className="p-2 bg-white text-red-600 rounded-lg shadow-lg hover:bg-red-600 hover:text-white transition-all"
+              className="p-2 bg-card text-red-600 rounded-lg shadow-lg hover:bg-red-600 hover:text-white transition-all"
             >
               <Trash2 size={16} />
             </button>
@@ -284,7 +284,7 @@ function EventCard({
         )}
       </div>
       <div className="p-6 flex-1 flex flex-col">
-        <h3 className="text-2xl mb-2">{event.title}</h3>
+        <h3 className="text-2xl mb-2 text-text-primary">{event.title}</h3>
         <p className="text-text-secondary text-sm line-clamp-2 mb-6 flex-1">{event.description}</p>
         <div className="space-y-3 mb-6">
           <div className="flex items-center gap-2 text-sm text-text-secondary">

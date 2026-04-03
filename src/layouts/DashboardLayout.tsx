@@ -97,7 +97,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   return (
     <div className="min-h-screen bg-background flex">
       {/* Sidebar Desktop */}
-      <aside className="hidden lg:flex flex-col w-64 bg-white border-r border-gray-100 p-6 sticky top-0 h-screen">
+      <aside className="hidden lg:flex flex-col w-64 bg-card border-r border-primary/10 p-6 sticky top-0 h-screen">
         <div className="flex items-center gap-3 mb-10 px-2">
           <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
             <Zap className="text-white" size={24} />
@@ -124,7 +124,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
                 location.pathname === item.path
                   ? "bg-primary text-white shadow-md shadow-primary/20"
-                  : "text-text-secondary hover:bg-gray-50 hover:text-primary"
+                  : "text-text-secondary hover:bg-primary/5 hover:text-primary"
               )}
             >
               <item.icon size={20} />
@@ -135,7 +135,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
         <button
           onClick={handleLogout}
-          className="flex items-center gap-3 px-4 py-3 rounded-xl text-text-secondary hover:bg-red-50 hover:text-red-600 transition-all duration-200 mt-auto"
+          className="flex items-center gap-3 px-4 py-3 rounded-xl text-text-secondary hover:bg-red-500/10 hover:text-red-500 transition-all duration-200 mt-auto"
         >
           <LogOut size={20} />
           <span className="font-medium">Logout</span>
@@ -143,7 +143,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Mobile Header */}
-      <div className="lg:hidden fixed top-0 left-0 right-0 bg-white border-b border-gray-100 z-50 px-4 py-3 flex items-center justify-between">
+      <div className="lg:hidden fixed top-0 left-0 right-0 bg-card border-b border-primary/10 z-50 px-4 py-3 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
             <Zap className="text-white" size={18} />
@@ -182,7 +182,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
               initial={{ x: "-100%" }}
               animate={{ x: 0 }}
               exit={{ x: "-100%" }}
-              className="fixed top-0 left-0 bottom-0 w-72 bg-white z-[70] p-6 lg:hidden"
+              className="fixed top-0 left-0 bottom-0 w-72 bg-card z-[70] p-6 lg:hidden"
             >
               <div className="flex items-center justify-between mb-10">
                 <div className="flex items-center gap-2">
@@ -206,7 +206,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                       "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
                       location.pathname === item.path
                         ? "bg-primary text-white shadow-md shadow-primary/20"
-                        : "text-text-secondary hover:bg-gray-50 hover:text-primary"
+                        : "text-text-secondary hover:bg-primary/5 hover:text-primary"
                     )}
                   >
                     <item.icon size={20} />
@@ -217,7 +217,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
               <button
                 onClick={handleLogout}
-                className="flex items-center gap-3 px-4 py-3 rounded-xl text-text-secondary hover:bg-red-50 hover:text-red-600 transition-all duration-200 mt-10 w-full"
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-text-secondary hover:bg-red-500/10 hover:text-red-500 transition-all duration-200 mt-10 w-full"
               >
                 <LogOut size={20} />
                 <span className="font-medium">Logout</span>

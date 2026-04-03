@@ -260,7 +260,7 @@ export default function Dashboard() {
               ))}
             </div>
           ) : (
-            <div className="bg-white rounded-3xl p-12 text-center card-shadow">
+            <div className="bg-card rounded-3xl p-12 text-center card-shadow">
               <Leaf className="mx-auto text-gray-200 mb-4" size={48} />
               <h3 className="text-xl mb-2">No daily challenges available</h3>
               <p className="text-text-secondary mb-6">Check back later or explore all challenges.</p>
@@ -286,9 +286,9 @@ export default function Dashboard() {
                 <Calendar className="text-primary" />
                 Recent Activity
               </h2>
-              <div className="bg-white rounded-3xl card-shadow overflow-hidden">
+              <div className="bg-card rounded-3xl card-shadow overflow-hidden">
                 {recentActivity.length > 0 ? (
-                  <div className="divide-y divide-gray-50">
+                  <div className="divide-y divide-primary/5">
                     {recentActivity.map((activity) => (
                       <ActivityItem key={activity.id} activity={activity} />
                     ))}
@@ -308,12 +308,12 @@ export default function Dashboard() {
                 <Star className="text-primary" />
                 My Event Submissions
               </h2>
-              <div className="bg-white rounded-3xl card-shadow overflow-hidden">
+              <div className="bg-card rounded-3xl card-shadow overflow-hidden">
                 {userSubmissions.length > 0 ? (
                   <>
-                    <div className="divide-y divide-gray-50">
+                    <div className="divide-y divide-primary/5">
                       {userSubmissions.map((sub) => (
-                        <div key={sub.id} className="p-6 flex items-center justify-between hover:bg-gray-50 transition-colors">
+                        <div key={sub.id} className="p-6 flex items-center justify-between hover:bg-primary/5 transition-colors">
                           <div className="flex items-center gap-4">
                             <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center text-primary">
                               <CheckCircle2 size={24} />
@@ -393,8 +393,8 @@ export default function Dashboard() {
 
 const StatCard = memo(({ icon, label, value }: { icon: React.ReactNode, label: string, value: string | number }) => {
   return (
-    <div className="bg-white px-6 py-4 rounded-2xl card-shadow flex items-center gap-4 min-w-[140px]">
-      <div className="w-10 h-10 rounded-xl bg-gray-50 flex items-center justify-center">
+    <div className="bg-card px-6 py-4 rounded-2xl card-shadow flex items-center gap-4 min-w-[140px]">
+      <div className="w-10 h-10 rounded-xl bg-primary/5 flex items-center justify-center">
         {icon}
       </div>
       <div>
@@ -407,11 +407,11 @@ const StatCard = memo(({ icon, label, value }: { icon: React.ReactNode, label: s
 
 const ActivityItem = memo(({ activity }: { activity: Completion }) => {
   return (
-    <div className="p-6 flex items-center justify-between hover:bg-gray-50 transition-colors">
+    <div className="p-6 flex items-center justify-between hover:bg-primary/5 transition-colors">
       <div className="flex items-center gap-4">
         <div className={cn(
           "w-12 h-12 rounded-2xl flex items-center justify-center text-xl",
-          activity.aiVerificationStatus === VerificationStatus.VERIFIED ? "bg-green-50" : "bg-red-50"
+          activity.aiVerificationStatus === VerificationStatus.VERIFIED ? "bg-green-500/10" : "bg-red-500/10"
         )}>
           {activity.aiVerificationStatus === VerificationStatus.VERIFIED ? "🌱" : "❌"}
         </div>

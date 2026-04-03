@@ -5,6 +5,7 @@ import { useEffect, useState, Suspense, lazy } from "react";
 import { onAuthStateChanged } from "firebase/auth";
 import { auth } from "./firebase";
 import { AuthProvider, useAuth } from "./contexts/AuthContext";
+import { ThemeProvider } from "./contexts/ThemeContext";
 
 // Lazy load pages for better performance
 const LandingPage = lazy(() => import("./pages/LandingPage"));
@@ -18,6 +19,7 @@ const Feed = lazy(() => import("./pages/Feed"));
 const Profile = lazy(() => import("./pages/Profile"));
 const Settings = lazy(() => import("./pages/Settings"));
 const AdminDashboard = lazy(() => import("./pages/AdminDashboard"));
+const AdminQuizManager = lazy(() => import("./pages/AdminQuizManager"));
 const AdminChallengeManager = lazy(() => import("./pages/AdminChallengeManager"));
 
 const queryClient = new QueryClient({
@@ -64,6 +66,7 @@ function AppContent() {
           
           {/* Admin Routes */}
           <Route path="/admin" element={user ? <AdminDashboard /> : <Navigate to="/login" />} />
+          <Route path="/admin/quiz" element={user ? <AdminQuizManager /> : <Navigate to="/login" />} />
           <Route path="/admin/challenges" element={user ? <AdminChallengeManager /> : <Navigate to="/login" />} />
         </Routes>
       </Suspense>
@@ -74,9 +77,11 @@ function AppContent() {
 export default function App() {
   return (
     <QueryClientProvider client={queryClient}>
-      <AuthProvider>
-        <AppContent />
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

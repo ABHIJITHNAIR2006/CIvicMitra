@@ -15,9 +15,18 @@
   --color-danger: #E63946;
 }
 
+:root.dark {
+  --color-background: #0F172A;
+  --color-card: #1E293B;
+  --color-text-primary: #F8FAFC;
+  --color-text-secondary: #94A3B8;
+  --color-primary: #4ADE80;
+  --color-primary-light: #86EFAC;
+}
+
 @layer base {
   body {
-    @apply bg-background text-text-primary font-sans;
+    @apply bg-background text-text-primary font-sans transition-colors duration-300;
   }
   
   h1, h2, h3, h4, h5, h6 {

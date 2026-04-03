@@ -95,14 +95,14 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden"
+            className="bg-card rounded-2xl shadow-xl w-full max-w-lg overflow-hidden"
           >
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-primary/5">
+            <div className="p-6 border-b border-primary/10 flex items-center justify-between bg-primary/5">
               <div>
                 <h3 className="text-xl font-bold text-primary">Register for Event</h3>
                 <p className="text-sm text-text-secondary">{event.title}</p>
               </div>
-              <button onClick={onClose} className="p-2 hover:bg-white rounded-full transition-colors">
+              <button onClick={onClose} className="p-2 hover:bg-primary/5 rounded-full transition-colors">
                 <X size={20} />
               </button>
             </div>
@@ -111,14 +111,14 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">Full Name *</label>
                 <div className="relative">
-                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <UserIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" size={18} />
                   <input
                     type="text"
                     value={formData.fullName}
                     onChange={e => setFormData({ ...formData, fullName: e.target.value })}
                     className={cn(
-                      "w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all",
-                      errors.fullName && "border-red-500 bg-red-50"
+                      "w-full pl-10 pr-4 py-2 rounded-xl border border-primary/10 bg-primary/5 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-text-primary",
+                      errors.fullName && "border-red-500 bg-red-500/10"
                     )}
                     placeholder="John Doe"
                   />
@@ -130,14 +130,14 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">Email Address *</label>
                   <div className="relative">
-                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" size={18} />
                     <input
                       type="email"
                       value={formData.email}
                       onChange={e => setFormData({ ...formData, email: e.target.value })}
                       className={cn(
-                        "w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all",
-                        errors.email && "border-red-500 bg-red-50"
+                        "w-full pl-10 pr-4 py-2 rounded-xl border border-primary/10 bg-primary/5 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-text-primary",
+                        errors.email && "border-red-500 bg-red-500/10"
                       )}
                       placeholder="john@example.com"
                     />
@@ -147,14 +147,14 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">Phone Number *</label>
                   <div className="relative">
-                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <Phone className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" size={18} />
                     <input
                       type="tel"
                       value={formData.phone}
                       onChange={e => setFormData({ ...formData, phone: e.target.value })}
                       className={cn(
-                        "w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all",
-                        errors.phone && "border-red-500 bg-red-50"
+                        "w-full pl-10 pr-4 py-2 rounded-xl border border-primary/10 bg-primary/5 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-text-primary",
+                        errors.phone && "border-red-500 bg-red-500/10"
                       )}
                       placeholder="+91 9876543210"
                     />
@@ -166,14 +166,14 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
               <div>
                 <label className="block text-sm font-medium text-text-secondary mb-1">College / Organization *</label>
                 <div className="relative">
-                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                  <Building2 className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" size={18} />
                   <input
                     type="text"
                     value={formData.organization}
                     onChange={e => setFormData({ ...formData, organization: e.target.value })}
                     className={cn(
-                      "w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all",
-                      errors.organization && "border-red-500 bg-red-50"
+                      "w-full pl-10 pr-4 py-2 rounded-xl border border-primary/10 bg-primary/5 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-text-primary",
+                      errors.organization && "border-red-500 bg-red-500/10"
                     )}
                     placeholder="University Name"
                   />
@@ -185,12 +185,12 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">Team Name (Optional)</label>
                   <div className="relative">
-                    <UsersIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+                    <UsersIcon className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" size={18} />
                     <input
                       type="text"
                       value={formData.teamName}
                       onChange={e => setFormData({ ...formData, teamName: e.target.value })}
-                      className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                      className="w-full pl-10 pr-4 py-2 rounded-xl border border-primary/10 bg-primary/5 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-text-primary"
                       placeholder="Team Alpha"
                     />
                   </div>
@@ -198,11 +198,11 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
                 <div>
                   <label className="block text-sm font-medium text-text-secondary mb-1">Number of Members</label>
                   <div className="relative">
-                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" size={18} />
+                    <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 text-text-secondary pointer-events-none" size={18} />
                     <select
                       value={formData.memberCount}
                       onChange={e => setFormData({ ...formData, memberCount: e.target.value })}
-                      className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none"
+                      className="w-full px-4 py-2 rounded-xl border border-primary/10 bg-primary/5 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none text-text-primary"
                     >
                       <option value="1">1 (Solo)</option>
                       <option value="2">2 Members</option>
@@ -353,14 +353,14 @@ export const ProofSubmissionModal: React.FC<ProofSubmissionModalProps> = ({
             initial={{ opacity: 0, scale: 0.95, y: 20 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
-            className="bg-white rounded-2xl shadow-xl w-full max-w-lg overflow-hidden"
+            className="bg-card rounded-2xl shadow-xl w-full max-w-lg overflow-hidden"
           >
-            <div className="p-6 border-b border-gray-100 flex items-center justify-between bg-primary/5">
+            <div className="p-6 border-b border-primary/10 flex items-center justify-between bg-primary/5">
               <div>
                 <h3 className="text-xl font-bold text-primary">Submit Proof</h3>
                 <p className="text-sm text-text-secondary">{event.title}</p>
               </div>
-              <button onClick={onClose} className="p-2 hover:bg-white rounded-full transition-colors">
+              <button onClick={onClose} className="p-2 hover:bg-primary/5 rounded-full transition-colors">
                 <X size={20} />
               </button>
             </div>
@@ -369,7 +369,7 @@ export const ProofSubmissionModal: React.FC<ProofSubmissionModalProps> = ({
               <div 
                 onClick={() => fileInputRef.current?.click()}
                 className={cn(
-                  "border-2 border-dashed border-gray-200 rounded-2xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-primary hover:bg-primary/5 transition-all",
+                  "border-2 border-dashed border-primary/10 rounded-2xl p-8 flex flex-col items-center justify-center gap-3 cursor-pointer hover:border-primary hover:bg-primary/5 transition-all",
                   file && "border-primary bg-primary/5"
                 )}
               >
@@ -383,12 +383,12 @@ export const ProofSubmissionModal: React.FC<ProofSubmissionModalProps> = ({
                 {preview ? (
                   <img src={preview} alt="Preview" className="w-24 h-24 object-cover rounded-lg shadow-md" />
                 ) : file?.type === 'application/pdf' ? (
-                  <div className="w-24 h-24 bg-red-50 rounded-lg flex items-center justify-center">
+                  <div className="w-24 h-24 bg-red-500/10 rounded-lg flex items-center justify-center">
                     <FileText className="text-red-500" size={40} />
                   </div>
                 ) : (
-                  <div className="w-16 h-16 bg-gray-50 rounded-full flex items-center justify-center">
-                    <Upload className="text-gray-400" size={32} />
+                  <div className="w-16 h-16 bg-primary/5 rounded-full flex items-center justify-center">
+                    <Upload className="text-text-secondary" size={32} />
                   </div>
                 )}
                 <div className="text-center">
@@ -406,10 +406,10 @@ export const ProofSubmissionModal: React.FC<ProofSubmissionModalProps> = ({
                 <select
                   value={type}
                   onChange={e => setType(e.target.value)}
-                  className="w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all"
+                  className="w-full px-4 py-2 rounded-xl border border-primary/10 bg-primary/5 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-text-primary"
                 >
                   {SUBMISSION_TYPES.map(t => (
-                    <option key={t.label} value={t.label}>{t.label} (+{t.points} pts)</option>
+                    <option key={t.label} value={t.label} className="bg-card">{t.label} (+{t.points} pts)</option>
                   ))}
                 </select>
               </div>
@@ -420,8 +420,8 @@ export const ProofSubmissionModal: React.FC<ProofSubmissionModalProps> = ({
                   value={description}
                   onChange={e => setDescription(e.target.value)}
                   className={cn(
-                    "w-full px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all h-24 resize-none",
-                    error && error.includes('Description') && "border-red-500 bg-red-50"
+                    "w-full px-4 py-2 rounded-xl border border-primary/10 bg-primary/5 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all h-24 resize-none text-text-primary",
+                    error && error.includes('Description') && "border-red-500 bg-red-500/10"
                   )}
                   placeholder="Tell us about what you're submitting..."
                 />
@@ -500,7 +500,7 @@ export const ParticipantsList: React.FC<ParticipantsListProps> = ({
 
   if (eventRegs.length === 0) {
     return (
-      <div className="bg-white rounded-2xl p-12 text-center border border-gray-100">
+      <div className="bg-card rounded-2xl p-12 text-center border border-primary/10">
         <div className="w-16 h-16 bg-primary/5 rounded-full flex items-center justify-center mx-auto mb-4">
           <UsersIcon className="text-primary" size={32} />
         </div>
@@ -511,8 +511,8 @@ export const ParticipantsList: React.FC<ParticipantsListProps> = ({
   }
 
   return (
-    <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-      <div className="p-6 border-b border-gray-100 bg-gray-50/50 flex flex-col md:flex-row md:items-center justify-between gap-4">
+    <div className="bg-card rounded-2xl border border-primary/10 overflow-hidden">
+      <div className="p-6 border-b border-primary/10 bg-primary/5 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <h4 className="text-lg font-bold text-text-primary flex items-center gap-2">
             <UsersIcon size={20} className="text-primary" />
@@ -523,23 +523,23 @@ export const ParticipantsList: React.FC<ParticipantsListProps> = ({
 
         <div className="flex flex-col sm:flex-row items-center gap-3">
           <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-text-secondary" size={18} />
             <input
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
               placeholder="Search participants..."
-              className="w-full pl-10 pr-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm"
+              className="w-full pl-10 pr-4 py-2 rounded-xl border border-primary/10 bg-primary/5 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm text-text-primary"
             />
           </div>
           <select
             value={sortBy}
             onChange={e => setSortBy(e.target.value as any)}
-            className="w-full sm:w-auto px-4 py-2 rounded-xl border border-gray-200 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm appearance-none bg-white"
+            className="w-full sm:w-auto px-4 py-2 rounded-xl border border-primary/10 bg-primary/5 focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none text-sm appearance-none text-text-primary"
           >
-            <option value="points">Most Points</option>
-            <option value="recent">Most Recent</option>
-            <option value="alpha">Alphabetical</option>
+            <option value="points" className="bg-card">Most Points</option>
+            <option value="recent" className="bg-card">Most Recent</option>
+            <option value="alpha" className="bg-card">Alphabetical</option>
           </select>
         </div>
       </div>
@@ -547,7 +547,7 @@ export const ParticipantsList: React.FC<ParticipantsListProps> = ({
       <div className="overflow-x-auto">
         <table className="w-full text-left">
           <thead>
-            <tr className="bg-gray-50/50 text-text-secondary text-xs font-bold uppercase tracking-wider">
+            <tr className="bg-primary/5 text-text-secondary text-xs font-bold uppercase tracking-wider">
               <th className="px-6 py-4">Rank</th>
               <th className="px-6 py-4">Participant</th>
               <th className="px-6 py-4">Organization</th>
@@ -556,9 +556,9 @@ export const ParticipantsList: React.FC<ParticipantsListProps> = ({
               <th className="px-6 py-4">Registered</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-gray-100">
+          <tbody className="divide-y divide-primary/5">
             {filteredParticipants.map((p, index) => (
-              <tr key={p.id} className="hover:bg-gray-50 transition-colors group">
+              <tr key={p.id} className="hover:bg-primary/5 transition-colors group">
                 <td className="px-6 py-4">
                   <div className="flex items-center justify-center w-8 h-8 rounded-lg font-bold text-sm">
                     {index === 0 ? <span className="text-2xl">🥇</span> :
@@ -582,7 +582,7 @@ export const ParticipantsList: React.FC<ParticipantsListProps> = ({
                 <td className="px-6 py-4">
                   <span className={cn(
                     "px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider",
-                    p.status === 'Verified' ? "bg-green-100 text-green-600" : "bg-gray-100 text-gray-500"
+                    p.status === 'Verified' ? "bg-green-500/10 text-green-500" : "bg-primary/5 text-text-secondary"
                   )}>
                     {p.status}
                   </span>
