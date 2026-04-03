@@ -8,6 +8,8 @@ import { X, CheckCircle2, AlertCircle, Trophy, ArrowRight, Loader2 } from "lucid
 import { toast } from "react-hot-toast";
 import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
 
+import { updateStats } from "../lib/badge-utils";
+
 interface QuizModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -137,6 +139,13 @@ export default function QuizModal({ isOpen, onClose, onComplete }: QuizModalProp
         points: increment(score),
         totalPoints: increment(score)
       }).catch(e => handleFirestoreError(e, OperationType.UPDATE, `users/${user.uid}`));
+
+      // Update badge stats
+      updateStats({
+        points: score,
+        quizzes_completed: 1,
+        perfect_quiz_scores: score === numQuestions * 10 ? 1 : 0
+      });
 
       setResult({ score, total: numQuestions * 10 });
       toast.success(`Quiz completed! You earned ${score} points.`);

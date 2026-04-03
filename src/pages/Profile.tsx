@@ -3,21 +3,27 @@ import { doc, getDoc, collection, query, where, getDocs, orderBy } from "firebas
 import { db, auth } from "../firebase";
 import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
 import DashboardLayout from "../layouts/DashboardLayout";
-import { UserProfile, Completion, Badge } from "../types";
-import { motion } from "motion/react";
-import { Award, Grid, List, Flame, Star, Zap, MapPin, Calendar } from "lucide-react";
+import { UserProfile, Completion } from "../types";
+import { motion, AnimatePresence } from "motion/react";
+import { Award, Grid, List, Flame, Star, Zap, MapPin, Calendar, Trophy } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useEventData } from "../lib/event-registration-utils";
 import { getCurrentLevel } from "../lib/level-utils";
 import LevelBadge from "../components/LevelBadge";
+import { getUserBadges, BADGES, getStats } from "../lib/badge-utils";
+import BadgeCard from "../components/BadgeCard";
+import BadgeUnlockOverlay from "../components/BadgeUnlockOverlay";
+import { useBadges } from "../hooks/useBadges";
 
 export default function Profile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [completions, setCompletions] = useState<Completion[]>([]);
-  const [badges, setBadges] = useState<Badge[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("ACTIVITY");
   const { submissions } = useEventData();
+  const { newlyEarnedBadge, closeUnlockOverlay } = useBadges();
+  const userBadges = getUserBadges();
+  const stats = getStats();
 
   const totalSubmissionPoints = submissions
     .filter(s => s.userEmail === auth.currentUser?.email)
@@ -25,6 +31,18 @@ export default function Profile() {
 
   const totalPoints = (profile?.points || 0) + totalSubmissionPoints;
   const currentLevel = getCurrentLevel(totalPoints);
+
+  // Top 4 badges
+  const topBadges = [...userBadges.earned]
+    .sort((a, b) => {
+      // Sort by rarity first, then newest
+      const rarityOrder = { legendary: 0, epic: 1, rare: 2, uncommon: 3, common: 4 };
+      if (rarityOrder[a.rarity] !== rarityOrder[b.rarity]) {
+        return rarityOrder[a.rarity] - rarityOrder[b.rarity];
+      }
+      return new Date(b.earned_at).getTime() - new Date(a.earned_at).getTime();
+    })
+    .slice(0, 4);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -38,12 +56,6 @@ export default function Profile() {
         const compSnap = await getDocs(compQuery).catch(e => handleFirestoreError(e, OperationType.LIST, "completions"));
         if (compSnap) {
           setCompletions(compSnap.docs.map(d => ({ id: d.id, ...d.data() } as Completion)));
-        }
-
-        const badgeQuery = query(collection(db, "users", auth.currentUser.uid, "badges"));
-        const badgeSnap = await getDocs(badgeQuery).catch(e => handleFirestoreError(e, OperationType.LIST, `users/${auth.currentUser.uid}/badges`));
-        if (badgeSnap) {
-          setBadges(badgeSnap.docs.map(d => d.data() as Badge));
         }
 
       } catch (error) {
@@ -73,9 +85,33 @@ export default function Profile() {
             </div>
           </div>
           <div className="pt-20 pb-8 px-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
-            <div>
+            <div className="flex-1">
               <h1 className="text-4xl font-display text-text-primary">{profile?.fullName}</h1>
               <p className="text-text-secondary mb-4">@{profile?.username}</p>
+              
+              {/* Top Badges Row */}
+              {topBadges.length > 0 && (
+                <div className="flex items-center gap-2 mb-4">
+                  {topBadges.map(badge => (
+                    <div 
+                      key={badge.id} 
+                      title={badge.name}
+                      className="w-10 h-10 bg-primary/5 rounded-xl flex items-center justify-center text-xl border border-primary/10 shadow-sm cursor-help hover:scale-110 transition-transform"
+                    >
+                      {badge.emoji}
+                    </div>
+                  ))}
+                  {userBadges.earned.length > 4 && (
+                    <button 
+                      onClick={() => setActiveTab("BADGES")}
+                      className="text-xs font-bold text-primary hover:underline ml-2"
+                    >
+                      + {userBadges.earned.length - 4} more
+                    </button>
+                  )}
+                </div>
+              )}
+
               <div className="flex flex-wrap gap-4 text-sm text-text-secondary">
                 <div className="flex items-center gap-1">
                   <MapPin size={16} />
@@ -103,7 +139,7 @@ export default function Profile() {
           <div className="md:col-span-2 grid grid-cols-2 gap-4">
             <StatCard icon={<Star className="text-primary" />} label="Total Points" value={totalPoints} />
             <StatCard icon={<Flame className="text-accent" />} label="Current Streak" value={profile?.currentStreak || 0} />
-            <StatCard icon={<Award className="text-primary-light" />} label="Badges" value={badges.length} />
+            <StatCard icon={<Award className="text-primary-light" />} label="Badges" value={userBadges.earned.length} />
             <StatCard icon={<Zap className="text-yellow-500" />} label="Rank" value={currentLevel.title} />
           </div>
           <div className="md:col-span-1">
@@ -159,19 +195,26 @@ export default function Profile() {
             )}
 
             {activeTab === "BADGES" && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-6">
-                {badges.length > 0 ? badges.map(badge => (
-                  <div key={badge.id} className="bg-card p-6 rounded-3xl card-shadow text-center space-y-3 border border-primary/10">
-                    <div className="w-16 h-16 bg-primary/5 rounded-full flex items-center justify-center mx-auto text-3xl">
-                      {badge.badgeIconUrl}
-                    </div>
-                    <p className="font-bold text-sm text-text-primary">{badge.badgeName}</p>
-                  </div>
-                )) : (
-                  <div className="col-span-full text-center py-20 bg-card rounded-3xl card-shadow border border-primary/10">
-                    <p className="text-text-secondary">No badges earned yet. Keep going!</p>
-                  </div>
-                )}
+              <div className="space-y-8">
+                <div className="flex items-center justify-between">
+                  <h3 className="text-2xl font-display text-text-primary">Earned Badges</h3>
+                  <p className="text-sm text-text-secondary font-bold">
+                    {userBadges.earned.length} / {BADGES.length} Badges
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-6">
+                  {BADGES.map(badge => {
+                    const earned = userBadges.earned.find(eb => eb.id === badge.id);
+                    return (
+                      <BadgeCard 
+                        key={badge.id} 
+                        badge={badge} 
+                        earnedBadge={earned} 
+                        stats={stats} 
+                      />
+                    );
+                  })}
+                </div>
               </div>
             )}
 
@@ -187,6 +230,15 @@ export default function Profile() {
           </div>
         </div>
       </div>
+
+      <AnimatePresence>
+        {newlyEarnedBadge && (
+          <BadgeUnlockOverlay 
+            badge={newlyEarnedBadge} 
+            onClose={closeUnlockOverlay} 
+          />
+        )}
+      </AnimatePresence>
     </DashboardLayout>
   );
 }

@@ -8,6 +8,7 @@ import { motion } from "motion/react";
 import { X, Upload, CheckCircle2, AlertCircle } from "lucide-react";
 import { cn } from "../lib/utils";
 import { verifyEcoProof } from "../services/geminiService";
+import { updateStats } from "../lib/badge-utils";
 import { toast } from "react-hot-toast";
 
 interface ChallengeModalProps {
@@ -58,7 +59,9 @@ export default function ChallengeModal({ challenge, onClose }: ChallengeModalPro
         isStreakDay: result.verified,
         submittedAt: new Date().toISOString(),
         verifiedAt: result.verified ? new Date().toISOString() : null,
-        caption: ""
+        caption: "",
+        likesCount: 0,
+        commentsCount: 0
       };
 
       await addDoc(collection(db, "completions"), completionData).catch(e => handleFirestoreError(e, OperationType.CREATE, "completions"));
@@ -76,6 +79,12 @@ export default function ChallengeModal({ challenge, onClose }: ChallengeModalPro
 
         await updateDoc(userRef, updateData).catch(e => handleFirestoreError(e, OperationType.UPDATE, `users/${auth.currentUser?.uid}`));
         
+        // Update badge stats
+        updateStats({
+          points: challenge.points,
+          proofs_submitted: 1
+        });
+
         setStatus("SUCCESS");
         toast.success(`Verified! +${challenge.points} points earned.`);
       } else {

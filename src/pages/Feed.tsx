@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, memo, useRef } from "react";
-import { collection, query, orderBy, limit, onSnapshot, doc, getDoc, addDoc, updateDoc, increment } from "firebase/firestore";
+import { collection, query, orderBy, limit, onSnapshot, doc, getDoc, addDoc, updateDoc, increment, setDoc, deleteDoc } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
 import DashboardLayout from "../layouts/DashboardLayout";
@@ -19,7 +19,14 @@ export default function Feed() {
   const [newPost, setNewPost] = useState("");
   const [isPosting, setIsPosting] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (auth.currentUser?.email === "arcadeabhi6@gmail.com") {
+      setIsAdmin(true);
+    }
+  }, []);
 
   const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -191,7 +198,7 @@ export default function Feed() {
         ) : (
           <div className="space-y-8">
             {posts.map((post) => (
-              <PostCard key={post.id} post={post} />
+              <PostCard key={post.id} post={post} isAdmin={isAdmin} />
             ))}
           </div>
         )}
@@ -200,25 +207,75 @@ export default function Feed() {
   );
 }
 
-const PostCard = memo(({ post }: { post: any }) => {
+const PostCard = memo(({ post, isAdmin }: { post: any, isAdmin: boolean }) => {
   const [liked, setLiked] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [isCommenting, setIsCommenting] = useState(false);
   const [showComments, setShowComments] = useState(false);
+  const [comments, setComments] = useState<any[]>([]);
+
+  // Check if user liked the post
+  useEffect(() => {
+    if (!auth.currentUser) return;
+    
+    const likeRef = doc(db, "completions", post.id, "likes", auth.currentUser.uid);
+    const unsubscribe = onSnapshot(likeRef, (snap) => {
+      setLiked(snap.exists());
+    });
+    
+    return unsubscribe;
+  }, [post.id]);
+
+  // Fetch comments
+  useEffect(() => {
+    if (!showComments) return;
+    
+    const commentsRef = collection(db, "completions", post.id, "comments");
+    const q = query(commentsRef, orderBy("createdAt", "asc"), limit(50));
+    
+    const unsubscribe = onSnapshot(q, async (snap) => {
+      const commentData = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+      
+      // Fetch user profiles for comments if missing
+      const userIds = Array.from(new Set(commentData.map((c: any) => c.userId)));
+      const missingIds = userIds.filter(id => !userCache[id]);
+      
+      if (missingIds.length > 0) {
+        await Promise.all(missingIds.map(async (uid: any) => {
+          try {
+            const uSnap = await getDoc(doc(db, "users", uid));
+            if (uSnap.exists()) userCache[uid] = uSnap.data();
+          } catch (e) {}
+        }));
+      }
+      
+      setComments(commentData.map((c: any) => ({
+        ...c,
+        username: userCache[c.userId]?.username || "eco_warrior",
+        avatarUrl: userCache[c.userId]?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${c.userId}`
+      })));
+    });
+    
+    return unsubscribe;
+  }, [post.id, showComments]);
 
   const handleLike = async () => {
     if (!auth.currentUser) return;
     
-    const newLikedState = !liked;
-    setLiked(newLikedState);
+    const likeRef = doc(db, "completions", post.id, "likes", auth.currentUser.uid);
+    const postRef = doc(db, "completions", post.id);
     
     try {
-      await updateDoc(doc(db, "completions", post.id), {
-        likesCount: increment(newLikedState ? 1 : -1)
-      });
+      if (liked) {
+        await deleteDoc(likeRef);
+        await updateDoc(postRef, { likesCount: increment(-1) });
+      } else {
+        await setDoc(likeRef, { createdAt: new Date().toISOString() });
+        await updateDoc(postRef, { likesCount: increment(1) });
+      }
     } catch (error) {
       console.error("Error updating like:", error);
-      setLiked(!newLikedState); // Rollback
+      toast.error("Failed to update like");
     }
   };
 
@@ -228,19 +285,43 @@ const PostCard = memo(({ post }: { post: any }) => {
 
     setIsCommenting(true);
     try {
-      // For now, we just increment the count as requested
-      // In a real app, we would add to a 'comments' subcollection
-      await updateDoc(doc(db, "completions", post.id), {
+      const commentsRef = collection(db, "completions", post.id, "comments");
+      const postRef = doc(db, "completions", post.id);
+      
+      await addDoc(commentsRef, {
+        userId: auth.currentUser.uid,
+        text: commentText,
+        createdAt: new Date().toISOString()
+      });
+      
+      await updateDoc(postRef, {
         commentsCount: increment(1)
       });
       
-      // Optionally add the comment to a local list if we were tracking them
       setCommentText("");
       toast.success("Comment added!");
     } catch (error) {
       toast.error("Failed to add comment");
     } finally {
       setIsCommenting(false);
+    }
+  };
+
+  const handleDeleteComment = async (commentId: string) => {
+    if (!auth.currentUser) return;
+    
+    try {
+      const commentRef = doc(db, "completions", post.id, "comments", commentId);
+      const postRef = doc(db, "completions", post.id);
+      
+      await deleteDoc(commentRef);
+      await updateDoc(postRef, {
+        commentsCount: increment(-1)
+      });
+      
+      toast.success("Comment deleted");
+    } catch (error) {
+      toast.error("Failed to delete comment");
     }
   };
 
@@ -354,14 +435,35 @@ const PostCard = memo(({ post }: { post: any }) => {
                 </button>
               </form>
               
-              <div className="space-y-2">
-                <p className="text-sm text-text-primary">
-                  <span className="font-bold">eco_warrior_2</span> Great job! Keep it up! 🌿
-                </p>
-                {post.commentsCount > 1 && (
-                  <button className="text-sm text-text-secondary font-medium hover:underline">
-                    View all {post.commentsCount} comments
-                  </button>
+              <div className="space-y-3 max-h-60 overflow-y-auto pr-2 custom-scrollbar">
+                {comments.length > 0 ? (
+                  comments.map((comment) => (
+                    <div key={comment.id} className="flex gap-2 group/comment">
+                      <img 
+                        src={comment.avatarUrl} 
+                        className="w-6 h-6 rounded-full object-cover" 
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="flex-1">
+                        <p className="text-sm text-text-primary">
+                          <span className="font-bold">@{comment.username}</span> {comment.text}
+                        </p>
+                        <p className="text-[10px] text-text-secondary">
+                          {comment.createdAt ? new Date(comment.createdAt).toLocaleDateString() : ""}
+                        </p>
+                      </div>
+                      {(auth.currentUser?.uid === comment.userId || isAdmin) && (
+                        <button 
+                          onClick={() => handleDeleteComment(comment.id)}
+                          className="p-1 text-text-secondary hover:text-red-500 opacity-0 group-hover/comment:opacity-100 transition-all"
+                        >
+                          <X size={14} />
+                        </button>
+                      )}
+                    </div>
+                  ))
+                ) : (
+                  <p className="text-sm text-text-secondary italic">No comments yet. Be the first!</p>
                 )}
               </div>
             </motion.div>

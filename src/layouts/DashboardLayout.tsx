@@ -26,6 +26,7 @@ import { db } from "../firebase";
 import { Role } from "../types";
 import { useEventData } from "../lib/event-registration-utils";
 import { getCurrentLevel } from "../lib/level-utils";
+import { getUserBadges } from "../lib/badge-utils";
 
 const baseNavItems = [
   { icon: Home, label: "Dashboard", path: "/dashboard" },
@@ -42,9 +43,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isAdmin, setIsAdmin] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [firestorePoints, setFirestorePoints] = useState(0);
+  const [userName, setUserName] = useState<string | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { submissions } = useEventData();
+  const userBadges = getUserBadges();
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -52,6 +55,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         setIsAdmin(false);
         setUserEmail(null);
         setFirestorePoints(0);
+        setUserName(null);
         return;
       }
       
@@ -66,6 +70,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (userDoc && userDoc.exists()) {
           const userData = userDoc.data();
           setFirestorePoints(userData.points || 0);
+          setUserName(userData.fullName || userData.username || user.displayName);
           if (userData.role === Role.ADMIN || user.email === "arcadeabhi6@gmail.com") {
             setIsAdmin(true);
           }
@@ -86,6 +91,11 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   const totalPoints = firestorePoints + eventPoints;
   const currentLevel = getCurrentLevel(totalPoints);
+
+  // Get 3 most recently earned badges
+  const recentBadges = [...userBadges.earned]
+    .sort((a, b) => new Date(b.earned_at).getTime() - new Date(a.earned_at).getTime())
+    .slice(0, 3);
 
   const navItems = isAdmin 
     ? [...baseNavItems, { icon: ShieldCheck, label: "Admin", path: "/admin" }]
@@ -125,6 +135,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           </div>
         </div>
 
+        {recentBadges.length > 0 && (
+          <div className="mb-6 px-4 py-3 bg-primary/5 rounded-xl border border-primary/10">
+            <p className="text-[10px] text-text-secondary font-black uppercase tracking-widest mb-2">Recent Badges</p>
+            <div className="flex gap-2">
+              {recentBadges.map(badge => (
+                <div 
+                  key={badge.id} 
+                  title={badge.name}
+                  className="w-10 h-10 bg-card rounded-lg flex items-center justify-center text-xl shadow-sm border border-primary/10 cursor-help hover:scale-110 transition-transform"
+                >
+                  {badge.emoji}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
         <nav className="flex-1 space-y-2">
           {navItems.map((item) => (
             <Link
@@ -161,6 +188,15 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <span className="text-xl font-display font-bold text-primary">CivicMitra</span>
         </div>
         <div className="flex items-center gap-3">
+          {recentBadges.length > 0 && (
+            <div className="hidden sm:flex gap-1 mr-2">
+              {recentBadges.map(badge => (
+                <span key={badge.id} title={badge.name} className="text-lg cursor-help">
+                  {badge.emoji}
+                </span>
+              ))}
+            </div>
+          )}
           <div className="bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/10 flex items-center gap-1.5">
             <span className="text-sm">{currentLevel.emoji}</span>
             <span className="text-sm font-bold text-primary">Lvl {currentLevel.level}</span>

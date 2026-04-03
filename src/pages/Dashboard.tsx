@@ -14,6 +14,9 @@ import DailyQuizCard from "../components/DailyQuizCard";
 import QuizModal from "../components/QuizModal";
 import LevelBadge from "../components/LevelBadge";
 import LevelUpCelebration from "../components/LevelUpCelebration";
+import BadgeSection from "../components/BadgeSection";
+import BadgeUnlockOverlay from "../components/BadgeUnlockOverlay";
+import { useBadges } from "../hooks/useBadges";
 import { cn } from "../lib/utils";
 import { useEventData } from "../lib/event-registration-utils";
 import { getCurrentLevel, LEVELS } from "../lib/level-utils";
@@ -32,12 +35,18 @@ export default function Dashboard() {
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [newLevel, setNewLevel] = useState<number | null>(null);
   const { registrations, submissions } = useEventData();
+  const { newlyEarnedBadge, closeUnlockOverlay, refresh: refreshBadges } = useBadges();
 
   const userSubmissions = submissions.filter(s => s.userEmail === auth.currentUser?.email);
   const totalSubmissionPoints = userSubmissions.reduce((sum, s) => sum + s.points, 0);
   const totalPoints = (profile?.points || 0) + totalSubmissionPoints;
 
   const currentLevel = useMemo(() => getCurrentLevel(totalPoints), [totalPoints]);
+
+  useEffect(() => {
+    if (loading) return;
+    refreshBadges();
+  }, [totalPoints, loading, refreshBadges]);
 
   useEffect(() => {
     if (loading) return;
@@ -400,6 +409,9 @@ export default function Dashboard() {
               <LevelBadge points={totalPoints} />
             </div>
 
+            {/* Badge Collection Section */}
+            <BadgeSection />
+
             <div>
               <h2 className="text-2xl mb-6 flex items-center gap-2">
                 <Calendar className="text-primary" />
@@ -510,6 +522,12 @@ export default function Dashboard() {
             <LevelUpCelebration 
               level={newLevel} 
               onClose={() => setShowLevelUp(false)} 
+            />
+          )}
+          {newlyEarnedBadge && (
+            <BadgeUnlockOverlay 
+              badge={newlyEarnedBadge} 
+              onClose={closeUnlockOverlay} 
             />
           )}
         </AnimatePresence>

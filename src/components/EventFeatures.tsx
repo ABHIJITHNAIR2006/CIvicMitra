@@ -21,8 +21,14 @@ import {
 import { cn } from '../lib/utils';
 import { Registration, Submission, useEventData } from '../lib/event-registration-utils';
 import { formatDistanceToNow } from 'date-fns';
+import { db, auth } from '../firebase';
+import { collection, addDoc, updateDoc, doc, increment } from 'firebase/firestore';
+import { toast } from 'react-hot-toast';
+import { handleFirestoreError, OperationType } from '../lib/firestore-error-handler';
 
 // --- Registration Modal ---
+
+import { updateStats } from "../lib/badge-utils";
 
 interface RegistrationModalProps {
   isOpen: boolean;
@@ -67,24 +73,38 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
     if (!validate()) return;
 
     setIsSubmitting(true);
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+    try {
+      const registration: Registration = {
+        id: Math.random().toString(36).substr(2, 9),
+        eventId: event.id,
+        eventName: event.title,
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.phone,
+        organization: formData.organization,
+        teamName: formData.teamName,
+        memberCount: formData.memberCount,
+        registeredAt: new Date().toISOString()
+      };
 
-    const registration: Registration = {
-      id: Math.random().toString(36).substr(2, 9),
-      eventId: event.id,
-      eventName: event.title,
-      fullName: formData.fullName,
-      email: formData.email,
-      phone: formData.phone,
-      organization: formData.organization,
-      teamName: formData.teamName,
-      memberCount: formData.memberCount,
-      registeredAt: new Date().toISOString()
-    };
+      // Save to Firestore
+      await addDoc(collection(db, "event_registrations"), registration)
+        .catch(e => handleFirestoreError(e, OperationType.CREATE, "event_registrations"));
 
-    onSuccess(registration);
-    setIsSubmitting(false);
+      // Update badge stats
+      updateStats({
+        events_registered: 1
+      });
+
+      onSuccess(registration);
+      toast.success('Successfully registered for the event!');
+      onClose();
+    } catch (error) {
+      console.error("Error registering for event:", error);
+      toast.error('Failed to register. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -323,26 +343,52 @@ export const ProofSubmissionModal: React.FC<ProofSubmissionModalProps> = ({
     }
 
     setIsSubmitting(true);
-    // Simulate verification
-    await new Promise(resolve => setTimeout(resolve, 2000));
+    try {
+      const selectedType = SUBMISSION_TYPES.find(t => t.label === type)!;
 
-    const selectedType = SUBMISSION_TYPES.find(t => t.label === type)!;
+      const submission: any = {
+        userId: auth.currentUser?.uid,
+        userEmail,
+        eventId: event.id,
+        eventName: event.title,
+        fileName: file.name,
+        description,
+        type,
+        points: selectedType.points,
+        status: 'Verified', // Auto-verified for demo as per prompt
+        aiVerificationStatus: 'VERIFIED',
+        proofUrl: preview || 'https://picsum.photos/seed/proof/400/300',
+        submittedAt: new Date().toISOString()
+      };
 
-    const submission: Submission = {
-      id: Math.random().toString(36).substr(2, 9),
-      userEmail,
-      eventId: event.id,
-      eventName: event.title,
-      fileName: file.name,
-      description,
-      type,
-      points: selectedType.points,
-      status: 'Verified', // Auto-verified for demo as per prompt
-      timestamp: new Date().toISOString()
-    };
+      // Save to Firestore
+      await addDoc(collection(db, "completions"), submission)
+        .catch(e => handleFirestoreError(e, OperationType.CREATE, "completions"));
 
-    onSuccess(submission);
-    setIsSubmitting(false);
+      // Update user points
+      if (auth.currentUser) {
+        const userRef = doc(db, "users", auth.currentUser.uid);
+        await updateDoc(userRef, {
+          points: increment(selectedType.points),
+          totalPoints: increment(selectedType.points)
+        }).catch(e => handleFirestoreError(e, OperationType.UPDATE, `users/${auth.currentUser?.uid}`));
+      }
+
+      // Update badge stats
+      updateStats({
+        points: selectedType.points,
+        proofs_submitted: 1
+      });
+
+      onSuccess(submission as Submission);
+      toast.success(`Proof submitted! You earned ${selectedType.points} points.`);
+      onClose();
+    } catch (error) {
+      console.error("Error submitting proof:", error);
+      toast.error('Failed to submit proof. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

@@ -14,7 +14,7 @@ service cloud.firestore {
     // Fields: challengeId, title, description, shortDescription, category, difficulty, points, bonusPointsStreak, iconEmoji, bannerImageUrl, proofInstructions, isDaily, isActive
     //
     // Collection: completions
-    // Fields: userId, challengeId, proofUrl, proofType, caption, aiVerificationStatus, aiVerificationScore, pointsAwarded, isStreakDay, submittedAt, verifiedAt
+    // Fields: userId, challengeId, proofUrl, proofType, caption, aiVerificationStatus, aiVerificationScore, pointsAwarded, isStreakDay, submittedAt, verifiedAt, likesCount, commentsCount
     //
     // Collection: events
     // Fields: eventId, title, description, eventType, status, startDate, endDate, location, bonusPoints
@@ -84,7 +84,9 @@ service cloud.firestore {
              data.proofUrl is string && data.proofUrl.size() < 1048576 && // 1MB limit for Firestore doc
              data.aiVerificationStatus in ['PENDING', 'VERIFIED', 'REJECTED', 'MANUAL_REVIEW'] &&
              (!('pointsAwarded' in data) || data.pointsAwarded is int) &&
-             (!('submittedAt' in data) || isValidDateString(data.submittedAt));
+             (!('submittedAt' in data) || isValidDateString(data.submittedAt)) &&
+             (!('likesCount' in data) || data.likesCount is int) &&
+             (!('commentsCount' in data) || data.commentsCount is int);
     }
 
     function isValidChallenge(data) {
@@ -122,7 +124,8 @@ service cloud.firestore {
     // ===============================================================
 
     match /users/{userId} {
-      allow get, list: if isAuthenticated();
+      allow get: if isAuthenticated();
+      allow list: if isAuthenticated(); // Needed for join_order calculation
       allow create: if isOwner(userId) && isValidUser(request.resource.data) && 
                        (request.resource.data.role == 'USER' || isAdmin());
       allow update: if (isOwner(userId) && 
@@ -131,14 +134,16 @@ service cloud.firestore {
                        request.resource.data.uid == resource.data.uid &&
                        request.resource.data.email == resource.data.email) || isAdmin();
       
-      // Allow atomic increments of totalPoints for any authenticated user (e.g. for challenges/quizzes)
-      // Actually, it's better to restrict it to the owner, but the user said "Users can update ONLY their own points"
-      // So I'll keep it as is.
-      
       match /badges/{badgeId} {
         allow read: if isAuthenticated();
         allow write: if isAdmin();
       }
+    }
+
+    match /event_registrations/{registrationId} {
+      allow read: if isAuthenticated() && (resource.data.email == request.auth.token.email || isAdmin());
+      allow create: if isAuthenticated() && request.resource.data.email == request.auth.token.email;
+      allow update, delete: if isAdmin();
     }
 
     match /challenges/{challengeId} {
@@ -150,10 +155,33 @@ service cloud.firestore {
     match /completions/{completionId} {
       allow read: if isAuthenticated();
       allow create: if isAuthenticated() && isValidCompletion(request.resource.data);
-      allow update: if isAdmin() && 
+      allow update: if (isAdmin() && 
                        request.resource.data.userId == resource.data.userId &&
-                       request.resource.data.challengeId == resource.data.challengeId;
+                       request.resource.data.challengeId == resource.data.challengeId) ||
+                       (isAuthenticated() && 
+                        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likesCount', 'commentsCount']) &&
+                        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['likesCount']) || 
+                          (request.resource.data.likesCount == resource.data.likesCount + 1 || 
+                           request.resource.data.likesCount == resource.data.likesCount - 1)) &&
+                        (!request.resource.data.diff(resource.data).affectedKeys().hasAny(['commentsCount']) || 
+                          (request.resource.data.commentsCount == resource.data.commentsCount + 1 || 
+                           request.resource.data.commentsCount == resource.data.commentsCount - 1)));
       allow delete: if isAdmin();
+
+      match /likes/{userId} {
+        allow read: if isAuthenticated();
+        allow write: if isOwner(userId);
+      }
+
+      match /comments/{commentId} {
+        allow read: if isAuthenticated();
+        allow create: if isAuthenticated() && 
+                         request.resource.data.userId == request.auth.uid &&
+                         request.resource.data.text is string &&
+                         request.resource.data.text.size() > 0 &&
+                         request.resource.data.text.size() <= 500;
+        allow delete: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      }
     }
 
     match /events/{eventId} {

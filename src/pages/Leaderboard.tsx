@@ -8,16 +8,35 @@ import { Trophy, Medal, Star, Flame } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useEventData } from "../lib/event-registration-utils";
 import { getCurrentLevel } from "../lib/level-utils";
+import { getUserBadges, BADGES } from "../lib/badge-utils";
 
 export default function Leaderboard() {
   const [users, setUsers] = useState<UserProfile[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("ALL_TIME");
   const { submissions } = useEventData();
+  const userBadges = getUserBadges();
 
   const eventPoints = submissions
     .filter(s => s.userEmail === auth.currentUser?.email)
     .reduce((total, s) => total + s.points, 0);
+
+  // Helper to get prestigious badges for a user
+  // Since we only have localStorage for the current user, 
+  // we can only show badges for the current user correctly.
+  // For others, we'll just show their level as before, or mock if needed.
+  // BUT the prompt says "Show 2 most prestigious badges next to name"
+  // I'll implement a way to get them for the current user.
+  const getPrestigiousBadges = (uid: string) => {
+    if (uid !== auth.currentUser?.uid) return [];
+    
+    return [...userBadges.earned]
+      .sort((a, b) => {
+        const rarityOrder = { legendary: 0, epic: 1, rare: 2, uncommon: 3, common: 4 };
+        return rarityOrder[a.rarity] - rarityOrder[b.rarity];
+      })
+      .slice(0, 2);
+  };
 
   useEffect(() => {
     setLoading(true);
@@ -116,6 +135,13 @@ export default function Leaderboard() {
                     <div>
                       <p className="font-bold text-text-primary flex items-center gap-2">
                         {user.fullName}
+                        <span className="flex items-center gap-1">
+                          {getPrestigiousBadges(user.uid).map(badge => (
+                            <span key={badge.id} title={badge.name} className="text-sm">
+                              {badge.emoji}
+                            </span>
+                          ))}
+                        </span>
                         <span className="text-sm px-2 py-0.5 bg-primary/5 rounded-full border border-primary/10 text-primary flex items-center gap-1">
                           {getCurrentLevel(user.uid === auth.currentUser?.uid ? user.points + eventPoints : user.points).emoji}
                           Lvl {getCurrentLevel(user.uid === auth.currentUser?.uid ? user.points + eventPoints : user.points).level}
