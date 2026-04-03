@@ -8,6 +8,7 @@ import { motion, AnimatePresence } from "motion/react";
 import { Heart, MessageCircle, Share2, MoreHorizontal, Send, Image as ImageIcon, X } from "lucide-react";
 import { cn } from "../lib/utils";
 import { toast } from "react-hot-toast";
+import { getCurrentLevel } from "../lib/level-utils";
 
 // Cache for user profiles to avoid redundant fetches
 const userCache: Record<string, any> = {};
@@ -56,7 +57,8 @@ export default function Feed() {
           id: d.id, 
           ...data, 
           username: userData?.username || "eco_warrior", 
-          userAvatar: userData?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.userId}` 
+          userAvatar: userData?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.userId}`,
+          userPoints: userData?.points || 0
         };
       }));
       setPosts(postData);
@@ -199,7 +201,14 @@ const PostCard = memo(({ post }: { post: any }) => {
             <img src={post.userAvatar} className="w-full h-full object-cover" loading="lazy" />
           </div>
           <div>
-            <p className="font-bold text-text-primary">@{post.username}</p>
+            <p className="font-bold text-text-primary flex items-center gap-1.5">
+              @{post.username}
+              {post.userPoints !== undefined && (
+                <span title={getCurrentLevel(post.userPoints).title}>
+                  {getCurrentLevel(post.userPoints).emoji}
+                </span>
+              )}
+            </p>
             <p className="text-xs text-text-secondary">{new Date(post.submittedAt).toLocaleString()}</p>
           </div>
         </div>

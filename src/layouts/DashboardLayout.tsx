@@ -15,8 +15,7 @@ import {
   X,
   Flame,
   ShieldCheck,
-  Star,
-  UserPlus
+  Star
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { onAuthStateChanged } from "firebase/auth";
@@ -26,9 +25,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { db } from "../firebase";
 import { Role } from "../types";
 import { useEventData } from "../lib/event-registration-utils";
-import { getSocialState, setCurrentSocialUser } from "../lib/social-utils";
-import UserProfileModal from "../components/UserProfileModal";
-import FollowListModal from "../components/FollowListModal";
+import { getCurrentLevel } from "../lib/level-utils";
 
 const baseNavItems = [
   { icon: Home, label: "Dashboard", path: "/dashboard" },
@@ -45,9 +42,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   const [isAdmin, setIsAdmin] = useState(false);
   const [userEmail, setUserEmail] = useState<string | null>(null);
   const [firestorePoints, setFirestorePoints] = useState(0);
-  const [socialState, setSocialState] = useState(getSocialState());
-  const [selectedUser, setSelectedUser] = useState<string | null>(null);
-  const [followList, setFollowList] = useState<{ userId: string, type: "followers" | "following" } | null>(null);
   const location = useLocation();
   const navigate = useNavigate();
   const { submissions } = useEventData();
@@ -72,8 +66,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         if (userDoc && userDoc.exists()) {
           const userData = userDoc.data();
           setFirestorePoints(userData.points || 0);
-          setCurrentSocialUser(userData);
-          setSocialState(getSocialState());
           if (userData.role === Role.ADMIN || user.email === "arcadeabhi6@gmail.com") {
             setIsAdmin(true);
           }
@@ -85,19 +77,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       }
     });
 
-    // Listen for storage changes to update social stats
-    const handleStorageChange = () => {
-      setSocialState(getSocialState());
-    };
-    window.addEventListener("storage", handleStorageChange);
-    // Also poll for changes since storage event only fires on other tabs
-    const interval = setInterval(handleStorageChange, 2000);
-
-    return () => {
-      unsubscribe();
-      window.removeEventListener("storage", handleStorageChange);
-      clearInterval(interval);
-    };
+    return () => unsubscribe();
   }, []);
 
   const eventPoints = submissions
@@ -105,6 +85,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     .reduce((total, s) => total + s.points, 0);
 
   const totalPoints = firestorePoints + eventPoints;
+  const currentLevel = getCurrentLevel(totalPoints);
 
   const navItems = isAdmin 
     ? [...baseNavItems, { icon: ShieldCheck, label: "Admin", path: "/admin" }]
@@ -127,6 +108,14 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
         </div>
 
         <div className="mb-6 px-4 py-3 bg-primary/5 rounded-xl border border-primary/10 flex items-center gap-3">
+          <div className="text-2xl">{currentLevel.emoji}</div>
+          <div>
+            <p className="text-xs text-text-secondary font-medium">Level {currentLevel.level}</p>
+            <p className="text-sm font-bold text-primary">{currentLevel.title}</p>
+          </div>
+        </div>
+
+        <div className="mb-6 px-4 py-3 bg-primary/5 rounded-xl border border-primary/10 flex items-center gap-3">
           <div className="w-8 h-8 bg-primary/10 rounded-lg flex items-center justify-center">
             <Star className="text-primary" size={18} />
           </div>
@@ -135,32 +124,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <p className="text-lg font-bold text-primary">⭐ {totalPoints} Points</p>
           </div>
         </div>
-
-        {auth.currentUser && (
-          <div className="mb-6 px-4 py-3 bg-primary/5 rounded-xl border border-primary/10">
-            <div className="flex items-center justify-around">
-              <button 
-                onClick={() => setFollowList({ userId: auth.currentUser!.uid, type: "followers" })}
-                className="text-center group"
-              >
-                <p className="text-lg font-display text-primary group-hover:scale-110 transition-transform">
-                  {socialState.follows[auth.currentUser.uid]?.followers.length || 0}
-                </p>
-                <p className="text-[10px] text-text-secondary font-bold uppercase tracking-widest">Followers</p>
-              </button>
-              <div className="w-px h-8 bg-primary/10" />
-              <button 
-                onClick={() => setFollowList({ userId: auth.currentUser!.uid, type: "following" })}
-                className="text-center group"
-              >
-                <p className="text-lg font-display text-primary group-hover:scale-110 transition-transform">
-                  {socialState.follows[auth.currentUser.uid]?.following.length || 0}
-                </p>
-                <p className="text-[10px] text-text-secondary font-bold uppercase tracking-widest">Following</p>
-              </button>
-            </div>
-          </div>
-        )}
 
         <nav className="flex-1 space-y-2">
           {navItems.map((item) => (
@@ -198,6 +161,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
           <span className="text-xl font-display font-bold text-primary">CivicMitra</span>
         </div>
         <div className="flex items-center gap-3">
+          <div className="bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/10 flex items-center gap-1.5">
+            <span className="text-sm">{currentLevel.emoji}</span>
+            <span className="text-sm font-bold text-primary">Lvl {currentLevel.level}</span>
+          </div>
           <div className="bg-primary/5 px-3 py-1.5 rounded-lg border border-primary/10 flex items-center gap-1.5">
             <Star className="text-primary" size={14} />
             <span className="text-sm font-bold text-primary">{totalPoints}</span>
@@ -278,26 +245,6 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <main className="flex-1 lg:p-8 p-4 pt-20 lg:pt-8 max-w-7xl mx-auto w-full">
         {children}
       </main>
-
-      <AnimatePresence>
-        {selectedUser && (
-          <UserProfileModal 
-            userId={selectedUser} 
-            onClose={() => setSelectedUser(null)} 
-          />
-        )}
-        {followList && (
-          <FollowListModal 
-            userId={followList.userId} 
-            type={followList.type} 
-            onClose={() => setFollowList(null)} 
-            onUserClick={(id) => {
-              setFollowList(null);
-              setSelectedUser(id);
-            }}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 }

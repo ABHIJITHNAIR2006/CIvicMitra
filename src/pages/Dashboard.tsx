@@ -6,14 +6,17 @@ import { toast } from "react-hot-toast";
 import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { motion, AnimatePresence } from "motion/react";
-import { Trophy, Zap, Target, ArrowRight, Leaf, Users, Calendar, Database, CheckCircle2, Clock, Star } from "lucide-react";
+import { Trophy, Zap, Target, ArrowRight, Leaf, Users, Calendar, Database, CheckCircle2, Clock, Star, Award } from "lucide-react";
 import { Link } from "react-router-dom";
 import ChallengeCard from "../components/ChallengeCard";
 import ChallengeModal from "../components/ChallengeModal";
 import DailyQuizCard from "../components/DailyQuizCard";
 import QuizModal from "../components/QuizModal";
+import LevelBadge from "../components/LevelBadge";
+import LevelUpCelebration from "../components/LevelUpCelebration";
 import { cn } from "../lib/utils";
 import { useEventData } from "../lib/event-registration-utils";
+import { getCurrentLevel, LEVELS } from "../lib/level-utils";
 
 export default function Dashboard() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -26,11 +29,51 @@ export default function Dashboard() {
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [displayCO2, setDisplayCO2] = useState(0);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [showLevelUp, setShowLevelUp] = useState(false);
+  const [newLevel, setNewLevel] = useState<number | null>(null);
   const { registrations, submissions } = useEventData();
 
   const userSubmissions = submissions.filter(s => s.userEmail === auth.currentUser?.email);
   const totalSubmissionPoints = userSubmissions.reduce((sum, s) => sum + s.points, 0);
   const totalPoints = (profile?.points || 0) + totalSubmissionPoints;
+
+  const currentLevel = useMemo(() => getCurrentLevel(totalPoints), [totalPoints]);
+
+  useEffect(() => {
+    if (loading) return;
+
+    const storedLevel = localStorage.getItem("user_level");
+    const sessionShown = sessionStorage.getItem("level_shown_this_session");
+
+    // 1. Initial Login/Session Popup (Show current level once per session)
+    if (!sessionShown) {
+      setNewLevel(currentLevel.level);
+      setShowLevelUp(true);
+      sessionStorage.setItem("level_shown_this_session", "true");
+      // Sync localStorage if it's the first time ever
+      if (!storedLevel) {
+        localStorage.setItem("user_level", currentLevel.level.toString());
+      }
+      return;
+    }
+
+    // 2. Level Increase Popup
+    if (storedLevel) {
+      const lastLevel = parseInt(storedLevel);
+      if (currentLevel.level > lastLevel) {
+        setNewLevel(currentLevel.level);
+        setShowLevelUp(true);
+        localStorage.setItem("user_level", currentLevel.level.toString());
+        toast.success(`⬆️ Level Up! You are now a ${currentLevel.title}!`, {
+          icon: '🎉',
+          duration: 5000
+        });
+      } else if (currentLevel.level < lastLevel) {
+        // Sync if points decreased (rare but possible if data resets)
+        localStorage.setItem("user_level", currentLevel.level.toString());
+      }
+    }
+  }, [currentLevel.level, loading]);
 
   const calculateCO2 = (pts: number) => (pts * 0.05).toFixed(1);
 
@@ -67,43 +110,18 @@ export default function Dashboard() {
   const welcomeMessage = useMemo(() => {
     const name = profile?.fullName?.split(' ')[0] || profile?.username || 'Eco-Warrior';
     const co2 = displayCO2.toFixed(1);
+    const level = getCurrentLevel(totalPoints);
     
-    if (totalPoints === 0) {
-      return (
-        <>
-          <h1 className="text-4xl mb-2">Welcome back, {name}!</h1>
-          <p className="text-text-secondary text-lg">Start earning points to track your CO2 impact! 🌱</p>
-        </>
-      );
-    }
-    
-    let text = "";
-    let emoji = "";
-    
-    if (totalPoints < 100) {
-      text = `You've saved ${co2} kg of CO2 so far. Keep going!`;
-      emoji = "🌿";
-    } else if (totalPoints < 300) {
-      text = `You've saved ${co2} kg of CO2 this week. Keep it up!`;
-      emoji = "♻️";
-    } else if (totalPoints < 500) {
-      text = `Amazing! You've saved ${co2} kg of CO2. You're making a real difference!`;
-      emoji = "🌍";
-    } else {
-      text = `Incredible! You've saved ${co2} kg of CO2. You are a Climate Champion!`;
-      emoji = "🏆🌎";
-    }
-
     return (
       <>
         <h1 className="text-4xl mb-2">Welcome back, {name}!</h1>
         <p className={cn(
-          "text-lg transition-colors duration-300",
+          "text-lg transition-colors duration-300 flex items-center gap-2",
           isUpdating ? "text-green-500 font-bold" : "text-text-secondary"
         )}>
-          {text.split(co2)[0]}
-          <span className="text-primary font-bold">{co2}kg</span>
-          {text.split(co2)[1]} {emoji}
+          <span className="font-bold">{level.emoji} {level.title}</span>
+          <span className="opacity-30">|</span>
+          <span>{co2} kg CO2 saved</span>
         </p>
       </>
     );
@@ -361,6 +379,15 @@ export default function Dashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Recent Activity */}
           <div className="lg:col-span-2 space-y-10">
+            {/* Level Progress Card */}
+            <div>
+              <h2 className="text-2xl mb-6 flex items-center gap-2">
+                <Award className="text-primary" />
+                Your Rank Progress
+              </h2>
+              <LevelBadge points={totalPoints} />
+            </div>
+
             <div>
               <h2 className="text-2xl mb-6 flex items-center gap-2">
                 <Calendar className="text-primary" />
@@ -463,6 +490,12 @@ export default function Dashboard() {
               isOpen={isQuizOpen} 
               onClose={() => setIsQuizOpen(false)} 
               onComplete={() => setIsQuizOpen(false)} 
+            />
+          )}
+          {showLevelUp && newLevel && (
+            <LevelUpCelebration 
+              level={newLevel} 
+              onClose={() => setShowLevelUp(false)} 
             />
           )}
         </AnimatePresence>

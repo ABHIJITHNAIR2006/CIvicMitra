@@ -5,9 +5,11 @@ import { handleFirestoreError, OperationType } from "../lib/firestore-error-hand
 import DashboardLayout from "../layouts/DashboardLayout";
 import { UserProfile, Completion, Badge } from "../types";
 import { motion } from "motion/react";
-import { MapPin, Calendar, Award, Grid, List, Flame, Star } from "lucide-react";
+import { Award, Grid, List, Flame, Star, Zap, MapPin, Calendar } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useEventData } from "../lib/event-registration-utils";
+import { getCurrentLevel } from "../lib/level-utils";
+import LevelBadge from "../components/LevelBadge";
 
 export default function Profile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -20,6 +22,9 @@ export default function Profile() {
   const totalSubmissionPoints = submissions
     .filter(s => s.userEmail === auth.currentUser?.email)
     .reduce((sum, s) => sum + s.points, 0);
+
+  const totalPoints = (profile?.points || 0) + totalSubmissionPoints;
+  const currentLevel = getCurrentLevel(totalPoints);
 
   useEffect(() => {
     const fetchProfile = async () => {
@@ -94,11 +99,16 @@ export default function Profile() {
         </div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <StatCard icon={<Star className="text-primary" />} label="Total Points" value={(profile?.points || 0) + totalSubmissionPoints} />
-          <StatCard icon={<Flame className="text-accent" />} label="Current Streak" value={profile?.currentStreak || 0} />
-          <StatCard icon={<Award className="text-primary-light" />} label="Badges" value={badges.length} />
-          <StatCard icon={<Grid className="text-text-secondary" />} label="Level" value={profile?.level || 1} />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="md:col-span-2 grid grid-cols-2 gap-4">
+            <StatCard icon={<Star className="text-primary" />} label="Total Points" value={totalPoints} />
+            <StatCard icon={<Flame className="text-accent" />} label="Current Streak" value={profile?.currentStreak || 0} />
+            <StatCard icon={<Award className="text-primary-light" />} label="Badges" value={badges.length} />
+            <StatCard icon={<Zap className="text-yellow-500" />} label="Rank" value={currentLevel.title} />
+          </div>
+          <div className="md:col-span-1">
+            <LevelBadge points={totalPoints} />
+          </div>
         </div>
 
         {/* Tabs */}
