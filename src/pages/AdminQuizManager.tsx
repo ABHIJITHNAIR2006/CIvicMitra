@@ -6,6 +6,7 @@ import { handleFirestoreError, OperationType } from "../lib/firestore-error-hand
 import DashboardLayout from "../layouts/DashboardLayout";
 import { Plus, Trash2, Edit2, Save, X, RefreshCw } from "lucide-react";
 import { toast } from "react-hot-toast";
+import ConfirmModal from "../components/ConfirmModal";
 
 const PRESEED_QUESTIONS: Omit<QuizQuestion, 'id'>[] = [
   {
@@ -235,6 +236,7 @@ export default function AdminQuizManager() {
   const [questions, setQuestions] = useState<QuizQuestion[]>([]);
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [questionToDelete, setQuestionToDelete] = useState<string | null>(null);
   const [newQuestion, setNewQuestion] = useState<Omit<QuizQuestion, 'id'>>({
     question: "",
     options: ["", "", "", ""],
@@ -305,13 +307,14 @@ export default function AdminQuizManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Delete this question?")) return;
     try {
       await deleteDoc(doc(db, "quiz_questions", id)).catch(e => handleFirestoreError(e, OperationType.DELETE, `quiz_questions/${id}`));
       toast.success("Deleted");
       fetchQuestions();
     } catch (error) {
       toast.error("Failed to delete");
+    } finally {
+      setQuestionToDelete(null);
     }
   };
 
@@ -462,7 +465,7 @@ export default function AdminQuizManager() {
                     </div>
                   </div>
                   <button 
-                    onClick={() => q.id && handleDelete(q.id)}
+                    onClick={() => q.id && setQuestionToDelete(q.id)}
                     className="p-2 text-red-500 hover:bg-red-500/10 rounded-xl transition-all opacity-0 group-hover:opacity-100"
                   >
                     <Trash2 size={20} />
@@ -472,6 +475,16 @@ export default function AdminQuizManager() {
             </div>
           )}
         </div>
+
+        <ConfirmModal
+          isOpen={!!questionToDelete}
+          onClose={() => setQuestionToDelete(null)}
+          onConfirm={() => questionToDelete && handleDelete(questionToDelete)}
+          title="Delete Question"
+          message="Are you sure you want to delete this quiz question? This action cannot be undone."
+          confirmText="Delete"
+          variant="danger"
+        />
       </div>
     </DashboardLayout>
   );

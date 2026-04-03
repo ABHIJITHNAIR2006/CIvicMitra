@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, memo, useRef } from "react";
-import { collection, query, orderBy, limit, onSnapshot, doc, getDoc, addDoc } from "firebase/firestore";
+import { collection, query, orderBy, limit, onSnapshot, doc, getDoc, addDoc, updateDoc, increment } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
 import DashboardLayout from "../layouts/DashboardLayout";
@@ -41,26 +41,35 @@ export default function Feed() {
     const q = query(collection(db, "completions"), orderBy("submittedAt", "desc"), limit(20));
     
     const unsubscribe = onSnapshot(q, async (snap) => {
-      const postData = await Promise.all(snap.docs.map(async (d) => {
-        const data = d.data() as Completion;
-        const userId = data.userId;
+      const completions = snap.docs.map(d => ({ id: d.id, ...d.data() } as Completion));
+      
+      // Batch fetch user profiles
+      const uniqueUserIds = Array.from(new Set(completions.map(c => c.userId)));
+      const missingUserIds = uniqueUserIds.filter(id => !userCache[id]);
 
-        // Use cached user data if available
-        let userData = userCache[userId];
-        if (!userData) {
-          const userSnap = await getDoc(doc(db, "users", userId));
-          userData = userSnap.exists() ? userSnap.data() : null;
-          if (userData) userCache[userId] = userData;
-        }
-        
+      if (missingUserIds.length > 0) {
+        await Promise.all(missingUserIds.map(async (userId) => {
+          try {
+            const userSnap = await getDoc(doc(db, "users", userId));
+            if (userSnap.exists()) {
+              userCache[userId] = userSnap.data();
+            }
+          } catch (error) {
+            console.error(`Error fetching user ${userId}:`, error);
+          }
+        }));
+      }
+
+      const postData = completions.map((data) => {
+        const userData = userCache[data.userId];
         return { 
-          id: d.id, 
           ...data, 
           username: userData?.username || "eco_warrior", 
           userAvatar: userData?.avatarUrl || `https://api.dicebear.com/7.x/avataaars/svg?seed=${data.userId}`,
           userPoints: userData?.points || 0
         };
-      }));
+      });
+
       setPosts(postData);
       setLoading(false);
     }, (error) => {
@@ -87,7 +96,9 @@ export default function Feed() {
         isStreakDay: false,
         submittedAt: new Date().toISOString(),
         verifiedAt: new Date().toISOString(),
-        caption: newPost
+        caption: newPost,
+        likesCount: 0,
+        commentsCount: 0
       };
 
       await addDoc(collection(db, "completions"), postData).catch(e => handleFirestoreError(e, OperationType.CREATE, "completions"));
@@ -117,7 +128,11 @@ export default function Feed() {
           <form onSubmit={handleCreatePost} className="space-y-4">
             <div className="flex gap-4">
               <div className="w-12 h-12 rounded-full bg-primary/5 overflow-hidden flex-shrink-0">
-                <img src={auth.currentUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${auth.currentUser?.uid}`} className="w-full h-full object-cover" />
+                <img 
+                  src={auth.currentUser?.photoURL || `https://api.dicebear.com/7.x/avataaars/svg?seed=${auth.currentUser?.uid}`} 
+                  className="w-full h-full object-cover" 
+                  referrerPolicy="no-referrer"
+                />
               </div>
               <div className="flex-1 space-y-4">
                 <textarea 
@@ -129,7 +144,7 @@ export default function Feed() {
                 
                 {selectedImage && (
                   <div className="relative w-full aspect-video rounded-2xl overflow-hidden bg-primary/5 group">
-                    <img src={selectedImage} className="w-full h-full object-cover" />
+                    <img src={selectedImage} className="w-full h-full object-cover" referrerPolicy="no-referrer" />
                     <button 
                       type="button"
                       onClick={() => setSelectedImage(null)}
@@ -187,6 +202,47 @@ export default function Feed() {
 
 const PostCard = memo(({ post }: { post: any }) => {
   const [liked, setLiked] = useState(false);
+  const [commentText, setCommentText] = useState("");
+  const [isCommenting, setIsCommenting] = useState(false);
+  const [showComments, setShowComments] = useState(false);
+
+  const handleLike = async () => {
+    if (!auth.currentUser) return;
+    
+    const newLikedState = !liked;
+    setLiked(newLikedState);
+    
+    try {
+      await updateDoc(doc(db, "completions", post.id), {
+        likesCount: increment(newLikedState ? 1 : -1)
+      });
+    } catch (error) {
+      console.error("Error updating like:", error);
+      setLiked(!newLikedState); // Rollback
+    }
+  };
+
+  const handleAddComment = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!commentText.trim() || !auth.currentUser) return;
+
+    setIsCommenting(true);
+    try {
+      // For now, we just increment the count as requested
+      // In a real app, we would add to a 'comments' subcollection
+      await updateDoc(doc(db, "completions", post.id), {
+        commentsCount: increment(1)
+      });
+      
+      // Optionally add the comment to a local list if we were tracking them
+      setCommentText("");
+      toast.success("Comment added!");
+    } catch (error) {
+      toast.error("Failed to add comment");
+    } finally {
+      setIsCommenting(false);
+    }
+  };
 
   return (
     <motion.div 
@@ -198,7 +254,12 @@ const PostCard = memo(({ post }: { post: any }) => {
       <div className="p-4 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <div className="w-10 h-10 rounded-full bg-primary/5 overflow-hidden">
-            <img src={post.userAvatar} className="w-full h-full object-cover" loading="lazy" />
+            <img 
+              src={post.userAvatar} 
+              className="w-full h-full object-cover" 
+              loading="lazy" 
+              referrerPolicy="no-referrer"
+            />
           </div>
           <div>
             <p className="font-bold text-text-primary flex items-center gap-1.5">
@@ -242,18 +303,21 @@ const PostCard = memo(({ post }: { post: any }) => {
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-4">
             <button 
-              onClick={() => setLiked(!liked)}
+              onClick={handleLike}
               className={cn(
                 "flex items-center gap-1 transition-colors",
                 liked ? "text-red-500" : "text-text-secondary hover:text-red-500"
               )}
             >
               <Heart size={24} fill={liked ? "currentColor" : "none"} />
-              <span className="font-bold">24</span>
+              <span className="font-bold">{post.likesCount || 0}</span>
             </button>
-            <button className="flex items-center gap-1 text-text-secondary hover:text-primary transition-colors">
+            <button 
+              onClick={() => setShowComments(!showComments)}
+              className="flex items-center gap-1 text-text-secondary hover:text-primary transition-colors"
+            >
               <MessageCircle size={24} />
-              <span className="font-bold">8</span>
+              <span className="font-bold">{post.commentsCount || 0}</span>
             </button>
             <button className="text-text-secondary hover:text-primary transition-colors">
               <Share2 size={24} />
@@ -264,15 +328,45 @@ const PostCard = memo(({ post }: { post: any }) => {
           </div>
         </div>
 
-        {/* Comments Preview */}
-        <div className="space-y-2">
-          <p className="text-sm text-text-primary">
-            <span className="font-bold">eco_warrior_2</span> Great job! Keep it up! 🌿
-          </p>
-          <button className="text-sm text-text-secondary font-medium hover:underline">
-            View all 8 comments
-          </button>
-        </div>
+        {/* Comments Section */}
+        <AnimatePresence>
+          {showComments && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              className="overflow-hidden space-y-4 pt-2 border-t border-primary/5"
+            >
+              <form onSubmit={handleAddComment} className="flex gap-2">
+                <input 
+                  type="text"
+                  value={commentText}
+                  onChange={(e) => setCommentText(e.target.value)}
+                  placeholder="Add a comment..."
+                  className="flex-1 bg-primary/5 border border-primary/10 rounded-xl px-4 py-2 text-sm outline-none focus:ring-2 focus:ring-primary text-text-primary"
+                />
+                <button 
+                  type="submit"
+                  disabled={!commentText.trim() || isCommenting}
+                  className="p-2 text-primary hover:bg-primary/10 rounded-xl disabled:opacity-50 transition-all"
+                >
+                  <Send size={18} />
+                </button>
+              </form>
+              
+              <div className="space-y-2">
+                <p className="text-sm text-text-primary">
+                  <span className="font-bold">eco_warrior_2</span> Great job! Keep it up! 🌿
+                </p>
+                {post.commentsCount > 1 && (
+                  <button className="text-sm text-text-secondary font-medium hover:underline">
+                    View all {post.commentsCount} comments
+                  </button>
+                )}
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </motion.div>
   );

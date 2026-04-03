@@ -130,6 +130,52 @@ export default function AdminDashboard() {
     }
   };
 
+  const fetchAdminData = async () => {
+    try {
+      // Fetch Pending Completions
+      const q = query(collection(db, "completions"), where("aiVerificationStatus", "in", [VerificationStatus.PENDING, VerificationStatus.MANUAL_REVIEW]));
+      const snap = await getDocs(q).catch(e => handleFirestoreError(e, OperationType.LIST, "completions"));
+      if (snap) {
+        const comps = snap.docs.map(d => ({ id: d.id, ...d.data() } as Completion));
+        setPendingCompletions(comps);
+
+        // Fetch related users and challenges
+        const userIds = Array.from(new Set(comps.map(c => c.userId)));
+        const challengeIds = Array.from(new Set(comps.map(c => c.challengeId)));
+
+        const uMap: Record<string, any> = {};
+        for (const uid of userIds) {
+          const uDoc = await getDoc(doc(db, "users", uid));
+          if (uDoc.exists()) uMap[uid] = uDoc.data();
+        }
+        setUsersMap(uMap);
+
+        const cMap: Record<string, Challenge> = {};
+        const cSnap = await getDocs(collection(db, "challenges"));
+        cSnap.docs.forEach(d => {
+          const c = d.data() as Challenge;
+          cMap[c.challengeId] = c;
+        });
+        setChallengesMap(cMap);
+      }
+
+      const usersSnap = await getDocs(collection(db, "users")).catch(e => handleFirestoreError(e, OperationType.LIST, "users"));
+      const compsSnap = await getDocs(collection(db, "completions")).catch(e => handleFirestoreError(e, OperationType.LIST, "completions"));
+
+      if (usersSnap && compsSnap && snap) {
+        setStats({
+          totalUsers: usersSnap.size,
+          totalCompletions: compsSnap.size,
+          pendingReviews: snap.size
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching admin data:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSeedData = async () => {
     setSeeding(true);
     try {
@@ -218,7 +264,7 @@ export default function AdminDashboard() {
       });
       await batch.commit();
       toast.success("Challenges seeded successfully!");
-      window.location.reload();
+      fetchAdminData();
     } catch (error) {
       toast.error("Failed to seed data");
     } finally {

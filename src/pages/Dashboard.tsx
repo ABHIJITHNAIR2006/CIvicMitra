@@ -127,6 +127,71 @@ export default function Dashboard() {
     );
   }, [profile, displayCO2, totalPoints, isUpdating]);
 
+  const [communityCO2, setCommunityCO2] = useState<number>(0);
+
+  const fetchData = async () => {
+    if (!auth.currentUser) return;
+
+    try {
+      // Parallel fetching for other data
+      const [challengesSnap, activitySnap, usersSnap] = await Promise.all([
+        getDocs(query(collection(db, "challenges"), where("isDaily", "==", true), limit(3))).catch(e => {
+          console.error("Challenges fetch failed:", e);
+          return null;
+        }),
+        getDocs(query(
+          collection(db, "completions"), 
+          where("userId", "==", auth.currentUser.uid),
+          orderBy("submittedAt", "desc"),
+          limit(5)
+        )).catch(e => {
+          console.error("Activity fetch failed:", e);
+          return null;
+        }),
+        getDocs(collection(db, "users")).catch(e => {
+          console.error("Users fetch failed:", e);
+          return null;
+        })
+      ]);
+
+      if (challengesSnap) {
+        setDailyChallenges(challengesSnap.docs.map(d => d.data() as Challenge));
+      }
+
+      if (activitySnap) {
+        setRecentActivity(activitySnap.docs.map(d => ({ id: d.id, ...d.data() } as Completion)));
+      }
+
+      if (usersSnap) {
+        const totalPoints = usersSnap.docs.reduce((sum, doc) => sum + (doc.data().points || 0), 0);
+        // User requested: sum of points * 0.05
+        setCommunityCO2(totalPoints * 0.05);
+      }
+
+      // Check for daily quiz attempt
+      const today = new Date().toISOString().split('T')[0];
+      const quizQuery = query(
+        collection(db, "quiz_attempts"),
+        where("userId", "==", auth.currentUser.uid),
+        where("date", "==", today),
+        limit(1)
+      );
+      const quizSnap = await getDocs(quizQuery).catch(e => {
+        console.error("Quiz check failed:", e);
+        return null;
+      });
+
+      if (quizSnap && quizSnap.empty) {
+        setIsQuizOpen(true);
+      }
+    } catch (error) {
+      console.error("Error fetching dashboard data:", error);
+      toast.error("Some data failed to load. Please refresh.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSeedData = async () => {
     setSeeding(true);
     try {
@@ -215,7 +280,7 @@ export default function Dashboard() {
       });
       await batch.commit();
       toast.success("Challenges seeded successfully!");
-      window.location.reload();
+      fetchData();
     } catch (error) {
       toast.error("Failed to seed data");
     } finally {
@@ -243,59 +308,6 @@ export default function Dashboard() {
     }, (e) => {
       console.error("User profile listener failed:", e);
     });
-
-    const fetchData = async () => {
-      if (!auth.currentUser) return;
-
-      try {
-        // Parallel fetching for other data
-        const [challengesSnap, activitySnap] = await Promise.all([
-          getDocs(query(collection(db, "challenges"), where("isDaily", "==", true), limit(3))).catch(e => {
-            console.error("Challenges fetch failed:", e);
-            return null;
-          }),
-          getDocs(query(
-            collection(db, "completions"), 
-            where("userId", "==", auth.currentUser.uid),
-            orderBy("submittedAt", "desc"),
-            limit(5)
-          )).catch(e => {
-            console.error("Activity fetch failed:", e);
-            return null;
-          })
-        ]);
-
-        if (challengesSnap) {
-          setDailyChallenges(challengesSnap.docs.map(d => d.data() as Challenge));
-        }
-
-        if (activitySnap) {
-          setRecentActivity(activitySnap.docs.map(d => ({ id: d.id, ...d.data() } as Completion)));
-        }
-
-        // Check for daily quiz attempt
-        const today = new Date().toISOString().split('T')[0];
-        const quizQuery = query(
-          collection(db, "quiz_attempts"),
-          where("userId", "==", auth.currentUser.uid),
-          where("date", "==", today),
-          limit(1)
-        );
-        const quizSnap = await getDocs(quizQuery).catch(e => {
-          console.error("Quiz check failed:", e);
-          return null;
-        });
-
-        if (quizSnap && quizSnap.empty) {
-          setIsQuizOpen(true);
-        }
-      } catch (error) {
-        console.error("Error fetching dashboard data:", error);
-        toast.error("Some data failed to load. Please refresh.");
-      } finally {
-        setLoading(false);
-      }
-    };
 
     fetchData();
     return () => unsubscribeProfile();
@@ -470,7 +482,9 @@ export default function Dashboard() {
             <div className="bg-primary text-white rounded-3xl p-8 card-shadow relative overflow-hidden">
               <div className="relative z-10">
                 <p className="text-primary-light font-bold uppercase tracking-widest text-xs mb-2">Global Impact</p>
-                <h3 className="text-4xl font-display mb-4">1,240 Tons</h3>
+                <h3 className="text-4xl font-display mb-4">
+                  {communityCO2.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Tons
+                </h3>
                 <p className="text-primary-light/80 text-sm leading-relaxed">Total CO2 offset by the EcoStep community this month. We're making a difference together!</p>
               </div>
               <Leaf className="absolute -bottom-4 -right-4 text-white/10" size={120} />

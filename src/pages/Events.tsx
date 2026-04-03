@@ -11,6 +11,7 @@ import EventModal from "../components/EventModal";
 import { toast } from "react-hot-toast";
 import { useEventData, Registration, Submission } from "../lib/event-registration-utils";
 import { RegistrationModal, ProofSubmissionModal, ParticipantsList } from "../components/EventFeatures";
+import ConfirmModal from "../components/ConfirmModal";
 
 export default function Events() {
   const [events, setEvents] = useState<any[]>([]);
@@ -20,6 +21,7 @@ export default function Events() {
   const [activeTab, setActiveTab] = useState<'events' | 'leaderboard'>('events');
   const [selectedEventForReg, setSelectedEventForReg] = useState<any>(null);
   const [selectedEventForProof, setSelectedEventForProof] = useState<any>(null);
+  const [eventToDelete, setEventToDelete] = useState<string | null>(null);
   
   const { isAdmin, user } = useAuth();
   const { registrations, submissions, addRegistration, addSubmission, isUserRegistered } = useEventData();
@@ -48,8 +50,6 @@ export default function Events() {
   };
 
   const handleDelete = async (eventId: string) => {
-    if (!window.confirm("Are you sure you want to delete this event?")) return;
-    
     try {
       await deleteDoc(doc(db, "events", eventId)).catch(e => handleFirestoreError(e, OperationType.DELETE, `events/${eventId}`));
       toast.success("Event deleted successfully!");
@@ -57,6 +57,8 @@ export default function Events() {
     } catch (error) {
       console.error("Error deleting event:", error);
       toast.error("Failed to delete event");
+    } finally {
+      setEventToDelete(null);
     }
   };
 
@@ -168,7 +170,7 @@ export default function Events() {
                     userEmail={user?.email || null}
                     isRegistered={isUserRegistered(user?.email || '', event.id)}
                     onEdit={() => handleEdit(event)}
-                    onDelete={() => handleDelete(event.id)}
+                    onDelete={() => setEventToDelete(event.id)}
                     onRegister={() => setSelectedEventForReg(event)}
                     onSubmitProof={() => setSelectedEventForProof(event)}
                   />
@@ -227,6 +229,16 @@ export default function Events() {
           event={selectedEventForProof || { id: '', title: '' }}
           userEmail={user?.email || ''}
           onSuccess={handleSubmissionSuccess}
+        />
+
+        <ConfirmModal
+          isOpen={!!eventToDelete}
+          onClose={() => setEventToDelete(null)}
+          onConfirm={() => eventToDelete && handleDelete(eventToDelete)}
+          title="Delete Event"
+          message="Are you sure you want to delete this event? This action cannot be undone."
+          confirmText="Delete"
+          variant="danger"
         />
       </div>
     </DashboardLayout>

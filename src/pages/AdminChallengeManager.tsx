@@ -7,6 +7,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { Plus, Trash2, Edit2, Save, X, RefreshCw, ShieldCheck, Trophy, Image as ImageIcon, HelpCircle } from "lucide-react";
 import { toast } from "react-hot-toast";
 import { cn } from "../lib/utils";
+import ConfirmModal from "../components/ConfirmModal";
 
 export default function AdminChallengeManager() {
   const [isAdmin, setIsAdmin] = useState(false);
@@ -14,6 +15,7 @@ export default function AdminChallengeManager() {
   const [loading, setLoading] = useState(true);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isAdding, setIsAdding] = useState(false);
+  const [challengeToDelete, setChallengeToDelete] = useState<string | null>(null);
   
   const [formData, setFormData] = useState<Challenge>({
     challengeId: "",
@@ -96,13 +98,14 @@ export default function AdminChallengeManager() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm("Are you sure you want to delete this challenge?")) return;
     try {
       await deleteDoc(doc(db, "challenges", id)).catch(e => handleFirestoreError(e, OperationType.DELETE, `challenges/${id}`));
       toast.success("Challenge deleted");
       fetchChallenges();
     } catch (error) {
       toast.error("Failed to delete challenge");
+    } finally {
+      setChallengeToDelete(null);
     }
   };
 
@@ -357,7 +360,7 @@ export default function AdminChallengeManager() {
                   <Edit2 size={20} />
                 </button>
                 <button 
-                  onClick={() => handleDelete(c.challengeId)}
+                  onClick={() => setChallengeToDelete(c.challengeId)}
                   className="p-3 bg-red-500/10 text-red-500 rounded-xl hover:bg-red-500 hover:text-white transition-all"
                   title="Delete"
                 >
@@ -372,6 +375,16 @@ export default function AdminChallengeManager() {
             </div>
           )}
         </div>
+
+        <ConfirmModal
+          isOpen={!!challengeToDelete}
+          onClose={() => setChallengeToDelete(null)}
+          onConfirm={() => challengeToDelete && handleDelete(challengeToDelete)}
+          title="Delete Challenge"
+          message="Are you sure you want to delete this challenge? This action cannot be undone."
+          confirmText="Delete"
+          variant="danger"
+        />
       </div>
     </DashboardLayout>
   );

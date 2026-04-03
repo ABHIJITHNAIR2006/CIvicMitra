@@ -94,6 +94,8 @@ export interface Completion {
   isStreakDay: boolean;
   submittedAt: string;
   verifiedAt?: string;
+  likesCount?: number;
+  commentsCount?: number;
 }
 
 export interface Badge {

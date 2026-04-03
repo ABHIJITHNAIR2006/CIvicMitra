@@ -45,6 +45,20 @@ export default function Challenges() {
     return () => unsubscribe();
   }, []);
 
+  const fetchChallenges = async () => {
+    try {
+      const snap = await getDocs(collection(db, "challenges")).catch(e => handleFirestoreError(e, OperationType.LIST, "challenges"));
+      if (snap) {
+        const data = snap.docs.map(d => d.data() as Challenge);
+        setChallenges(data);
+      }
+    } catch (error) {
+      console.error("Error fetching challenges:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSeedData = async () => {
     setSeeding(true);
     try {
@@ -133,7 +147,7 @@ export default function Challenges() {
       });
       await batch.commit();
       toast.success("Challenges seeded successfully!");
-      window.location.reload();
+      fetchChallenges();
     } catch (error) {
       toast.error("Failed to seed data");
     } finally {
@@ -142,19 +156,6 @@ export default function Challenges() {
   };
 
   useEffect(() => {
-    const fetchChallenges = async () => {
-      try {
-        const snap = await getDocs(collection(db, "challenges")).catch(e => handleFirestoreError(e, OperationType.LIST, "challenges"));
-        if (snap) {
-          const data = snap.docs.map(d => d.data() as Challenge);
-          setChallenges(data);
-        }
-      } catch (error) {
-        console.error("Error fetching challenges:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
     fetchChallenges();
   }, []);
 
