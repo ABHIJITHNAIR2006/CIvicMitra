@@ -1,5 +1,5 @@
 import { useEffect, useState, useMemo, memo } from "react";
-import { collection, query, getDocs, limit, orderBy, where, doc, getDoc, setDoc, writeBatch } from "firebase/firestore";
+import { collection, query, getDocs, limit, orderBy, where, doc, getDoc, setDoc, writeBatch, onSnapshot } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { Category, Difficulty, Challenge, UserProfile, Completion, VerificationStatus, Role } from "../types";
 import { toast } from "react-hot-toast";
@@ -24,10 +24,90 @@ export default function Dashboard() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [seeding, setSeeding] = useState(false);
   const [isQuizOpen, setIsQuizOpen] = useState(false);
+  const [displayCO2, setDisplayCO2] = useState(0);
+  const [isUpdating, setIsUpdating] = useState(false);
   const { registrations, submissions } = useEventData();
 
   const userSubmissions = submissions.filter(s => s.userEmail === auth.currentUser?.email);
   const totalSubmissionPoints = userSubmissions.reduce((sum, s) => sum + s.points, 0);
+  const totalPoints = (profile?.points || 0) + totalSubmissionPoints;
+
+  const calculateCO2 = (pts: number) => (pts * 0.05).toFixed(1);
+
+  useEffect(() => {
+    const targetCO2 = parseFloat(calculateCO2(totalPoints));
+    if (targetCO2 === displayCO2) return;
+
+    const startValue = displayCO2;
+    const duration = 1500; // 1.5 seconds
+    const startTime = performance.now();
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Ease out quad
+      const easedProgress = progress * (2 - progress);
+      const currentValue = startValue + (targetCO2 - startValue) * easedProgress;
+      
+      setDisplayCO2(currentValue);
+
+      if (progress < 1) {
+        requestAnimationFrame(animate);
+      } else {
+        setDisplayCO2(targetCO2);
+        setIsUpdating(true);
+        setTimeout(() => setIsUpdating(false), 1000);
+      }
+    };
+
+    requestAnimationFrame(animate);
+  }, [totalPoints]);
+
+  const welcomeMessage = useMemo(() => {
+    const name = profile?.fullName?.split(' ')[0] || profile?.username || 'Eco-Warrior';
+    const co2 = displayCO2.toFixed(1);
+    
+    if (totalPoints === 0) {
+      return (
+        <>
+          <h1 className="text-4xl mb-2">Welcome back, {name}!</h1>
+          <p className="text-text-secondary text-lg">Start earning points to track your CO2 impact! 🌱</p>
+        </>
+      );
+    }
+    
+    let text = "";
+    let emoji = "";
+    
+    if (totalPoints < 100) {
+      text = `You've saved ${co2} kg of CO2 so far. Keep going!`;
+      emoji = "🌿";
+    } else if (totalPoints < 300) {
+      text = `You've saved ${co2} kg of CO2 this week. Keep it up!`;
+      emoji = "♻️";
+    } else if (totalPoints < 500) {
+      text = `Amazing! You've saved ${co2} kg of CO2. You're making a real difference!`;
+      emoji = "🌍";
+    } else {
+      text = `Incredible! You've saved ${co2} kg of CO2. You are a Climate Champion!`;
+      emoji = "🏆🌎";
+    }
+
+    return (
+      <>
+        <h1 className="text-4xl mb-2">Welcome back, {name}!</h1>
+        <p className={cn(
+          "text-lg transition-colors duration-300",
+          isUpdating ? "text-green-500 font-bold" : "text-text-secondary"
+        )}>
+          {text.split(co2)[0]}
+          <span className="text-primary font-bold">{co2}kg</span>
+          {text.split(co2)[1]} {emoji}
+        </p>
+      </>
+    );
+  }, [profile, displayCO2, totalPoints, isUpdating]);
 
   const handleSeedData = async () => {
     setSeeding(true);
@@ -126,21 +206,32 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
+    if (!auth.currentUser) return;
+
+    // Immediate Admin Check based on email
+    if (auth.currentUser.email === "arcadeabhi6@gmail.com") {
+      setIsAdmin(true);
+    }
+
+    // Real-time user profile listener
+    const unsubscribeProfile = onSnapshot(doc(db, "users", auth.currentUser.uid), (snapshot) => {
+      if (snapshot.exists()) {
+        const userData = snapshot.data() as UserProfile;
+        setProfile(userData);
+        if (userData.role === Role.ADMIN) {
+          setIsAdmin(true);
+        }
+      }
+    }, (e) => {
+      console.error("User profile listener failed:", e);
+    });
+
     const fetchData = async () => {
       if (!auth.currentUser) return;
 
-      // Immediate Admin Check based on email
-      if (auth.currentUser.email === "arcadeabhi6@gmail.com") {
-        setIsAdmin(true);
-      }
-
       try {
-        // Parallel fetching for better performance
-        const [userSnap, challengesSnap, activitySnap] = await Promise.all([
-          getDoc(doc(db, "users", auth.currentUser.uid)).catch(e => {
-            console.error("User profile fetch failed:", e);
-            return null; // Don't throw, just return null
-          }),
+        // Parallel fetching for other data
+        const [challengesSnap, activitySnap] = await Promise.all([
           getDocs(query(collection(db, "challenges"), where("isDaily", "==", true), limit(3))).catch(e => {
             console.error("Challenges fetch failed:", e);
             return null;
@@ -155,16 +246,6 @@ export default function Dashboard() {
             return null;
           })
         ]);
-
-        if (userSnap && userSnap.exists()) {
-          const userData = userSnap.data() as UserProfile;
-          setProfile(userData);
-
-          // Admin Check from profile role
-          if (userData.role === Role.ADMIN) {
-            setIsAdmin(true);
-          }
-        }
 
         if (challengesSnap) {
           setDailyChallenges(challengesSnap.docs.map(d => d.data() as Challenge));
@@ -188,7 +269,6 @@ export default function Dashboard() {
         });
 
         if (quizSnap && quizSnap.empty) {
-          // User hasn't taken the quiz today, open it automatically
           setIsQuizOpen(true);
         }
       } catch (error) {
@@ -200,6 +280,7 @@ export default function Dashboard() {
     };
 
     fetchData();
+    return () => unsubscribeProfile();
   }, []);
 
   if (loading) {
@@ -218,8 +299,7 @@ export default function Dashboard() {
         {/* Welcome Header */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div>
-            <h1 className="text-4xl mb-2">Welcome back, {profile?.fullName?.split(' ')[0] || profile?.username || 'Eco-Warrior'}!</h1>
-            <p className="text-text-secondary text-lg">You've saved <span className="text-primary font-bold">12.4kg</span> of CO2 this week. Keep it up!</p>
+            {welcomeMessage}
             {isAdmin && dailyChallenges.length === 0 && (
               <button 
                 onClick={handleSeedData}

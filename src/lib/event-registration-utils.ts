@@ -39,12 +39,25 @@ export const useEventData = () => {
   const [quizScores, setQuizScores] = useState<QuizScore[]>([]);
 
   useEffect(() => {
-    const savedRegs = localStorage.getItem('event_registrations');
-    const savedSubs = localStorage.getItem('event_submissions');
-    const savedQuiz = localStorage.getItem('quiz_scores');
-    if (savedRegs) setRegistrations(JSON.parse(savedRegs));
-    if (savedSubs) setSubmissions(JSON.parse(savedSubs));
-    if (savedQuiz) setQuizScores(JSON.parse(savedQuiz));
+    const loadData = () => {
+      const savedRegs = localStorage.getItem('event_registrations');
+      const savedSubs = localStorage.getItem('event_submissions');
+      const savedQuiz = localStorage.getItem('quiz_scores');
+      if (savedRegs) setRegistrations(JSON.parse(savedRegs));
+      if (savedSubs) setSubmissions(JSON.parse(savedSubs));
+      if (savedQuiz) setQuizScores(JSON.parse(savedQuiz));
+    };
+
+    loadData();
+
+    const handleStorageChange = (e: StorageEvent) => {
+      if (['event_registrations', 'event_submissions', 'quiz_scores'].includes(e.key || '')) {
+        loadData();
+      }
+    };
+
+    window.addEventListener('storage', handleStorageChange);
+    return () => window.removeEventListener('storage', handleStorageChange);
   }, []);
 
   const addRegistration = (reg: Registration) => {

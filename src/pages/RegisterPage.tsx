@@ -5,6 +5,7 @@ import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { signInWithGoogle } from "../lib/auth-utils";
 import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
+import { syncUserToAllUsers, setCurrentSocialUser } from "../lib/social-utils";
 import { toast } from "react-hot-toast";
 import { motion } from "motion/react";
 import { UserPlus, Mail, Lock, User, MapPin } from "lucide-react";
@@ -48,6 +49,9 @@ export default function RegisterPage() {
       };
 
       await setDoc(doc(db, "users", user.uid), userProfile).catch(e => handleFirestoreError(e, OperationType.CREATE, `users/${user.uid}`));
+
+      // Sync to social state
+      setCurrentSocialUser(userProfile);
 
       toast.success("Account created successfully!");
       navigate("/dashboard");

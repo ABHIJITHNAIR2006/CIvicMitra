@@ -1,8 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { signInWithEmailAndPassword } from "firebase/auth";
-import { auth } from "../firebase";
+import { doc, getDoc } from "firebase/firestore";
+import { auth, db } from "../firebase";
 import { signInWithGoogle } from "../lib/auth-utils";
+import { setCurrentSocialUser } from "../lib/social-utils";
 import { toast } from "react-hot-toast";
 import { motion } from "motion/react";
 import { LogIn, Mail, Lock, Eye, EyeOff } from "lucide-react";
@@ -18,7 +20,17 @@ export default function LoginPage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await signInWithEmailAndPassword(auth, email, password);
+      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      const user = userCredential.user;
+      
+      // Fetch profile to sync
+      const userSnap = await getDoc(doc(db, "users", user.uid));
+      if (userSnap.exists()) {
+        setCurrentSocialUser(userSnap.data());
+      } else {
+        setCurrentSocialUser({ uid: user.uid, email: user.email, username: user.email?.split('@')[0] });
+      }
+
       toast.success("Welcome back!");
       navigate("/dashboard");
     } catch (error: any) {
