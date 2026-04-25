@@ -4,7 +4,7 @@ import { db } from "../firebase";
 import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { motion, AnimatePresence } from "motion/react";
-import { Calendar, MapPin, Users, ArrowRight, Star, Plus, Edit2, Trash2, CheckCircle2, Camera, Trophy as TrophyIcon, Loader2 } from "lucide-react";
+import { Calendar, MapPin, Users, ArrowRight, Star, Plus, Edit2, Trash2, CheckCircle2, Camera, Trophy as TrophyIcon, Loader2, Database } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuth } from "../contexts/AuthContext";
 import EventModal from "../components/EventModal";
@@ -25,6 +25,7 @@ export default function Events() {
   
   const { isAdmin, user } = useAuth();
   const { registrations, submissions, loading: eventDataLoading, isUserRegistered } = useEventData();
+  const [seeding, setSeeding] = useState(false);
 
   const fetchEvents = useCallback(async () => {
     try {
@@ -39,6 +40,152 @@ export default function Events() {
       setLoading(false);
     }
   }, []);
+
+  const handleSeedData = async () => {
+    setSeeding(true);
+    try {
+      const eventsData = [
+        {
+          eventId: "city-forest-walk",
+          title: "City Forest Walk",
+          description: "Join a guided nature walk through an urban forest with a trained naturalist who will explain local flora, fauna, and the importance of urban green lungs. Participants will document species spotted and learn how to identify native plants.",
+          shortDescription: "Guided nature walk through an urban forest with a naturalist.",
+          eventType: "WALK",
+          category: "NATURE",
+          bonusPoints: 30,
+          iconEmoji: "🌳",
+          bannerImageUrl: "https://picsum.photos/seed/forestwalk/800/400",
+          location: { venueName: "City Forest / Nearest Urban Park", address: "" },
+          startDate: "2025-05-10T07:00:00Z",
+          endDate: "2025-05-10T09:30:00Z",
+          maxParticipants: 40,
+          registrationDeadline: "2025-05-08",
+          isActive: true,
+          isFeatured: true,
+          proofInstructions: "Upload a photo of yourself at the forest walk with at least one plant or bird documented.",
+          status: "UPCOMING"
+        },
+        {
+          eventId: "beach-cleanup-drive",
+          title: "Beach / Lake Cleanup Drive",
+          description: "Join the community for an organized shoreline cleanup. Participants will collect, segregate into dry and wet waste, and log the total waste collected. Gloves and bags will be provided. Come prepared with good shoes and water.",
+          shortDescription: "Community shoreline cleanup — collect, segregate, and log waste.",
+          eventType: "CLEANUP",
+          category: "NATURE",
+          bonusPoints: 40,
+          iconEmoji: "🏖️",
+          bannerImageUrl: "https://picsum.photos/seed/beachclean/800/400",
+          location: { venueName: "Nearest Beach / Lake Front", address: "" },
+          startDate: "2025-05-17T06:30:00Z",
+          endDate: "2025-05-17T09:00:00Z",
+          maxParticipants: 100,
+          registrationDeadline: "2025-05-15",
+          isActive: true,
+          isFeatured: true,
+          proofInstructions: "Upload a photo of the waste bags you filled at the cleanup site.",
+          status: "UPCOMING"
+        },
+        {
+          eventId: "tree-plantation-marathon",
+          title: "Tree Plantation Marathon",
+          description: "Be part of a city-wide tree planting initiative where teams plant 100+ native trees across multiple locations. Each registered participant is expected to plant a minimum of 3 saplings. Saplings, soil, and tools will be provided.",
+          shortDescription: "Plant 100+ trees across the city in teams — minimum 3 per person.",
+          eventType: "PLANTATION",
+          category: "NATURE",
+          bonusPoints: 50,
+          iconEmoji: "🌱",
+          bannerImageUrl: "https://picsum.photos/seed/plantation/800/400",
+          location: { venueName: "Multiple City Locations", address: "" },
+          startDate: "2025-06-05T08:00:00Z",
+          endDate: "2025-06-05T12:00:00Z",
+          maxParticipants: 200,
+          registrationDeadline: "2025-06-02",
+          isActive: true,
+          isFeatured: true,
+          proofInstructions: "Upload a photo of you planting your sapling with the location visible.",
+          status: "UPCOMING"
+        },
+        {
+          eventId: "butterfly-garden-visit",
+          title: "Butterfly Garden Visit",
+          description: "Visit a local butterfly garden or botanical garden with fellow eco-citizens. A guide will help you identify native butterfly species, host plants, and the role of pollinators in local ecosystems. Document as many species as you can.",
+          shortDescription: "Visit a butterfly garden and document species spotted.",
+          eventType: "VISIT",
+          category: "NATURE",
+          bonusPoints: 25,
+          iconEmoji: "🦋",
+          bannerImageUrl: "https://picsum.photos/seed/butterfly/800/400",
+          location: { venueName: "Local Botanical Garden", address: "" },
+          startDate: "2025-05-24T09:00:00Z",
+          endDate: "2025-05-24T11:00:00Z",
+          maxParticipants: 30,
+          registrationDeadline: "2025-05-22",
+          isActive: true,
+          isFeatured: false,
+          proofInstructions: "Upload a photo of a butterfly or plant you spotted and documented.",
+          status: "UPCOMING"
+        },
+        {
+          eventId: "river-rejuvenation-walk",
+          title: "River Rejuvenation Walk",
+          description: "Walk along a local river stretch with a team of civic volunteers. You will document pollution points such as sewage outfalls, illegal dumping, and encroachments, and submit a structured pollution report to the municipality.",
+          shortDescription: "Walk a river stretch, document pollution, and file a report.",
+          eventType: "WALK",
+          category: "NATURE",
+          bonusPoints: 35,
+          iconEmoji: "🌊",
+          bannerImageUrl: "https://picsum.photos/seed/riverwalk/800/400",
+          location: { venueName: "Local River Stretch", address: "" },
+          startDate: "2025-06-14T07:00:00Z",
+          endDate: "2025-06-14T10:00:00Z",
+          maxParticipants: 50,
+          registrationDeadline: "2025-06-12",
+          isActive: true,
+          isFeatured: false,
+          proofInstructions: "Upload a screenshot of your submitted pollution report or photo of documentation.",
+          status: "UPCOMING"
+        },
+        {
+          eventId: "seed-ball-workshop",
+          title: "Seed Ball Workshop",
+          description: "Learn the ancient Japanese technique of making seed balls using native wildflower and grass seeds mixed with clay and compost. After the workshop, participants will scatter seed balls in barren and degraded land around the city.",
+          shortDescription: "Make seed balls and scatter them in barren city areas.",
+          eventType: "WORKSHOP",
+          category: "NATURE",
+          bonusPoints: 30,
+          iconEmoji: "🌼",
+          bannerImageUrl: "https://picsum.photos/seed/seedball/800/400",
+          location: { venueName: "Community Centre", address: "" },
+          startDate: "2025-05-31T10:00:00Z",
+          endDate: "2025-05-31T13:00:00Z",
+          maxParticipants: 35,
+          registrationDeadline: "2025-05-29",
+          isActive: true,
+          isFeatured: false,
+          proofInstructions: "Upload a photo of the seed balls you made and where you scattered them.",
+          status: "UPCOMING"
+        },
+      ];
+
+      const { writeBatch } = await import("firebase/firestore");
+      const batch = writeBatch(db);
+      eventsData.forEach(e => {
+        const ref = doc(db, "events", e.eventId);
+        batch.set(ref, {
+          ...e,
+          createdAt: new Date().toISOString()
+        });
+      });
+      await batch.commit();
+      toast.success("Events updated successfully!");
+      fetchEvents();
+    } catch (error) {
+      console.error("Error seeding events:", error);
+      toast.error("Failed to update events");
+    } finally {
+      setSeeding(false);
+    }
+  };
 
   useEffect(() => {
     fetchEvents();
@@ -86,6 +233,16 @@ export default function Events() {
             <p className="text-text-secondary">Join local eco-initiatives and earn bonus points.</p>
           </div>
           <div className="flex gap-3">
+            {isAdmin && (
+              <button 
+                onClick={handleSeedData}
+                disabled={seeding}
+                className="px-6 py-3 bg-accent text-white rounded-xl font-bold hover:bg-accent/90 transition-all flex items-center gap-2 shadow-lg shadow-accent/20 disabled:opacity-50"
+              >
+                <Database size={20} />
+                {seeding ? "Updating..." : "Update Database"}
+              </button>
+            )}
             <div className="bg-card p-1 rounded-xl border border-primary/10 flex shadow-sm">
               <button
                 onClick={() => setActiveTab('events')}
@@ -128,37 +285,46 @@ export default function Events() {
         ) : activeTab === 'events' ? (
           <>
             {/* Featured Event */}
-            <div className="relative h-96 rounded-3xl overflow-hidden card-shadow group cursor-pointer">
-              <img 
-                src="https://picsum.photos/seed/cleanup/1200/600" 
-                className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
-                referrerPolicy="no-referrer"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 md:p-12">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="bg-accent text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">Featured</span>
-                  <span className="bg-white/20 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">Clean-up Drive</span>
+            {events.filter(e => e.isFeatured)[0] && (
+              <div 
+                className="relative h-96 rounded-3xl overflow-hidden card-shadow group cursor-pointer"
+                onClick={() => setSelectedEventForReg(events.filter(e => e.isFeatured)[0])}
+              >
+                <img 
+                  src={events.filter(e => e.isFeatured)[0].bannerImageUrl || "https://picsum.photos/seed/featured/1200/600"} 
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                  referrerPolicy="no-referrer"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-8 md:p-12">
+                  <div className="flex items-center gap-2 mb-4">
+                    <span className="bg-accent text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">Featured</span>
+                    <span className="bg-white/20 backdrop-blur-md text-white px-3 py-1 rounded-full text-xs font-bold uppercase tracking-widest">
+                      {events.filter(e => e.isFeatured)[0].eventType}
+                    </span>
+                  </div>
+                  <h2 className="text-4xl md:text-5xl text-white mb-4 max-w-2xl">{events.filter(e => e.isFeatured)[0].title}</h2>
+                  <div className="flex flex-wrap gap-6 text-white/80 mb-8">
+                    <div className="flex items-center gap-2">
+                      <Calendar size={20} />
+                      <span>{new Date(events.filter(e => e.isFeatured)[0].startDate).toLocaleDateString()} • {new Date(events.filter(e => e.isFeatured)[0].startDate).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <MapPin size={20} />
+                      <span>{events.filter(e => e.isFeatured)[0].location?.venueName}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Users size={20} />
+                      <span>{registrations.filter(r => r.eventId === events.filter(e => e.isFeatured)[0].id).length} Joined</span>
+                    </div>
+                  </div>
+                  {!isUserRegistered(events.filter(e => e.isFeatured)[0].id) && (
+                    <button className="w-fit px-8 py-4 bg-white text-primary rounded-xl font-bold hover:bg-gray-100 transition-colors flex items-center gap-2">
+                      Register Now <ArrowRight size={20} />
+                    </button>
+                  )}
                 </div>
-                <h2 className="text-4xl md:text-5xl text-white mb-4 max-w-2xl">Juhu Beach Clean-up Drive 2026</h2>
-                <div className="flex flex-wrap gap-6 text-white/80 mb-8">
-                  <div className="flex items-center gap-2">
-                    <Calendar size={20} />
-                    <span>March 28, 2026 • 07:00 AM</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin size={20} />
-                    <span>Juhu Beach, Mumbai</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Users size={20} />
-                    <span>124 Joined</span>
-                  </div>
-                </div>
-                <button className="w-fit px-8 py-4 bg-white text-primary rounded-xl font-bold hover:bg-gray-100 transition-colors flex items-center gap-2">
-                  Register Now <ArrowRight size={20} />
-                </button>
               </div>
-            </div>
+            )}
 
             {/* Events Grid */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">

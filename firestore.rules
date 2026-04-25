@@ -38,9 +38,9 @@ service cloud.firestore {
     
     function isAdmin() {
       return isAuthenticated() && 
-        ((exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
-          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN') ||
-         (request.auth.token.email == "arcadeabhi6@gmail.com" && request.auth.token.email_verified == true));
+        (request.auth.token.email == "arcadeabhi6@gmail.com" ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'ADMIN'));
     }
 
     match /connection_test/{docId} {
@@ -110,13 +110,23 @@ service cloud.firestore {
              data.eventId is string && data.eventId.size() > 0 &&
              data.title is string && data.title.size() > 0 && data.title.size() <= 100 &&
              data.description is string && data.description.size() > 0 && data.description.size() <= 2000 &&
-             data.eventType in ['CLEANUP', 'WORKSHOP', 'MEETING', 'CAMPAIGN', 'OTHER', 'In-Person'] &&
+             data.eventType in ['CLEANUP', 'WORKSHOP', 'MEETING', 'CAMPAIGN', 'OTHER', 'WALK', 'PLANTATION', 'VISIT', 'In-Person'] &&
              data.status in ['UPCOMING', 'ONGOING', 'COMPLETED', 'CANCELLED'] &&
              isValidDateString(data.startDate) &&
              data.location is map &&
              data.location.venueName is string && data.location.venueName.size() > 0 &&
              (!('endDate' in data) || data.endDate == "" || isValidDateString(data.endDate)) &&
-             (!('bonusPoints' in data) || data.bonusPoints is number);
+             (!('bonusPoints' in data) || data.bonusPoints is int || data.bonusPoints is number) &&
+             (!('category' in data) || data.category is string) &&
+             (!('shortDescription' in data) || data.shortDescription is string) &&
+             (!('isActive' in data) || data.isActive is bool) &&
+             (!('isFeatured' in data) || data.isFeatured is bool) &&
+             (!('registrationDeadline' in data) || data.registrationDeadline == "" || isValidDateString(data.registrationDeadline)) &&
+             (!('maxParticipants' in data) || data.maxParticipants is int) &&
+             (!('iconEmoji' in data) || data.iconEmoji is string) &&
+             (!('bannerImageUrl' in data) || isValidUrl(data.bannerImageUrl)) &&
+             (!('proofInstructions' in data) || data.proofInstructions is string) &&
+             (!('createdAt' in data) || isValidDateString(data.createdAt));
     }
 
     // ===============================================================

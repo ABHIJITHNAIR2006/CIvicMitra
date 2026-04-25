@@ -192,6 +192,9 @@ export default function EventModal({ event, onClose, onSuccess }: EventModalProp
               >
                 <option value="CLEANUP">Cleanup Drive</option>
                 <option value="WORKSHOP">Workshop</option>
+                <option value="WALK">Nature Walk</option>
+                <option value="PLANTATION">Tree Plantation</option>
+                <option value="VISIT">Eco Visit</option>
                 <option value="MEETING">Community Meeting</option>
                 <option value="CAMPAIGN">Awareness Campaign</option>
                 <option value="OTHER">Other</option>
