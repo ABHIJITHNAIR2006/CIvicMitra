@@ -146,6 +146,15 @@ service cloud.firestore {
       allow update, delete: if isAdmin();
     }
 
+    match /event_participants_public/{participantId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && 
+                       request.resource.data.userId == request.auth.uid &&
+                       !('email' in request.resource.data) &&
+                       !('phone' in request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
     match /challenges/{challengeId} {
       allow read: if isAuthenticated();
       allow create, update: if isAdmin() && isValidChallenge(request.resource.data);

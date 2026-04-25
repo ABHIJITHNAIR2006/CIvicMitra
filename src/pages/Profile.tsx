@@ -5,7 +5,7 @@ import { handleFirestoreError, OperationType } from "../lib/firestore-error-hand
 import DashboardLayout from "../layouts/DashboardLayout";
 import { UserProfile, Completion } from "../types";
 import { motion, AnimatePresence } from "motion/react";
-import { Award, Grid, List, Flame, Star, Zap, MapPin, Calendar, Trophy } from "lucide-react";
+import { Award, Grid, List, Flame, Star, Zap, MapPin, Calendar, Trophy, Leaf } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useEventData } from "../lib/event-registration-utils";
 import { getCurrentLevel } from "../lib/level-utils";
@@ -14,6 +14,8 @@ import { getUserBadges, BADGES, getStats } from "../lib/badge-utils";
 import BadgeCard from "../components/BadgeCard";
 import BadgeUnlockOverlay from "../components/BadgeUnlockOverlay";
 import { useBadges } from "../hooks/useBadges";
+import { calculateCO2, calculateElectricity, calculateWater, calculateWaste, formatCO2, formatElectricity, formatWater, formatWaste } from "../lib/impact-utils";
+import ImpactCard from "../components/ImpactCard";
 
 export default function Profile() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -144,6 +146,20 @@ export default function Profile() {
           </div>
           <div className="md:col-span-1">
             <LevelBadge points={totalPoints} />
+          </div>
+        </div>
+
+        {/* Environmental Impact */}
+        <div>
+          <h2 className="text-2xl mb-4 flex items-center gap-2">
+            <Leaf className="text-primary" />
+            Environmental Impact
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <ImpactCard icon="🌿" label="CO₂ Saved"        value={formatCO2(calculateCO2(totalPoints))}                sublabel="kilograms"  color="green"  />
+            <ImpactCard icon="⚡" label="Electricity Saved" value={formatElectricity(calculateElectricity(totalPoints))} sublabel="watt-hours" color="yellow" />
+            <ImpactCard icon="💧" label="Water Saved"       value={formatWater(calculateWater(totalPoints))}             sublabel="litres"     color="blue"   />
+            <ImpactCard icon="🗑️" label="Waste Reduced"    value={formatWaste(calculateWaste(totalPoints))}             sublabel="kilograms"  color="orange" />
           </div>
         </div>
 

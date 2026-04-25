@@ -84,12 +84,18 @@ export const RegistrationModal: React.FC<RegistrationModalProps> = ({
         organization: formData.organization,
         teamName: formData.teamName,
         memberCount: formData.memberCount,
-        registeredAt: new Date().toISOString()
+        registeredAt: new Date().toISOString(),
+        userId: auth.currentUser?.uid
       };
 
-      // Save to Firestore
+      // 1. Save to private registrations (contains PII)
       await addDoc(collection(db, "event_registrations"), registration)
         .catch(e => handleFirestoreError(e, OperationType.CREATE, "event_registrations"));
+
+      // 2. Save to public participants (NO PII - email and phone removed)
+      const { email, phone, ...publicData } = registration;
+      await addDoc(collection(db, "event_participants_public"), publicData)
+        .catch(e => handleFirestoreError(e, OperationType.CREATE, "event_participants_public"));
 
       // Update badge stats
       updateStats({
@@ -348,7 +354,6 @@ export const ProofSubmissionModal: React.FC<ProofSubmissionModalProps> = ({
 
       const submission: any = {
         userId: auth.currentUser?.uid,
-        userEmail,
         eventId: event.id,
         eventName: event.title,
         fileName: file.name,
@@ -522,7 +527,12 @@ export const ParticipantsList: React.FC<ParticipantsListProps> = ({
   const eventRegs = registrations.filter(r => r.eventId === eventId);
   
   const participants = eventRegs.map(reg => {
-    const regSubmissions = submissions.filter(s => s.userEmail === reg.email && s.eventId === eventId);
+    // Link using userId instead of email to avoid PII issues and handle missing emails in public data
+    const regSubmissions = submissions.filter(s => 
+      (s.userId && reg.userId && s.userId === reg.userId) || 
+      (s.userEmail && reg.email && s.userEmail === reg.email)
+    ).filter(s => s.eventId === eventId);
+    
     const totalPoints = regSubmissions.reduce((sum, s) => sum + s.points, 0);
     const status = regSubmissions.length > 0 ? 'Verified' : 'Pending';
     

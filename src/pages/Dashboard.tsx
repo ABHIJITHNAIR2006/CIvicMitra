@@ -20,6 +20,8 @@ import { useBadges } from "../hooks/useBadges";
 import { cn } from "../lib/utils";
 import { useEventData } from "../lib/event-registration-utils";
 import { getCurrentLevel, LEVELS } from "../lib/level-utils";
+import { calculateCO2, calculateElectricity, calculateWater, calculateWaste, formatCO2, formatElectricity, formatWater, formatWaste } from "../lib/impact-utils";
+import ImpactCard from "../components/ImpactCard";
 
 export default function Dashboard() {
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -31,6 +33,9 @@ export default function Dashboard() {
   const [seeding, setSeeding] = useState(false);
   const [isQuizOpen, setIsQuizOpen] = useState(false);
   const [displayCO2, setDisplayCO2] = useState(0);
+  const [displayElectricity, setDisplayElectricity] = useState(0);
+  const [displayWater, setDisplayWater] = useState(0);
+  const [displayWaste, setDisplayWaste] = useState(0);
   const [isUpdating, setIsUpdating] = useState(false);
   const [showLevelUp, setShowLevelUp] = useState(false);
   const [newLevel, setNewLevel] = useState<number | null>(null);
@@ -84,41 +89,32 @@ export default function Dashboard() {
     }
   }, [currentLevel.level, loading]);
 
-  const calculateCO2 = (pts: number) => (pts * 0.05).toFixed(1);
+  const animateValue = (
+    from: number,
+    to: number,
+    setter: (v: number) => void,
+    duration = 1500
+  ) => {
+    const startTime = performance.now();
+    const step = (now: number) => {
+      const progress = Math.min((now - startTime) / duration, 1);
+      const eased = progress * (2 - progress);
+      setter(from + (to - from) * eased);
+      if (progress < 1) requestAnimationFrame(step);
+      else setter(to);
+    };
+    requestAnimationFrame(step);
+  };
 
   useEffect(() => {
-    const targetCO2 = parseFloat(calculateCO2(totalPoints));
-    if (targetCO2 === displayCO2) return;
-
-    const startValue = displayCO2;
-    const duration = 1500; // 1.5 seconds
-    const startTime = performance.now();
-
-    const animate = (currentTime: number) => {
-      const elapsed = currentTime - startTime;
-      const progress = Math.min(elapsed / duration, 1);
-      
-      // Ease out quad
-      const easedProgress = progress * (2 - progress);
-      const currentValue = startValue + (targetCO2 - startValue) * easedProgress;
-      
-      setDisplayCO2(currentValue);
-
-      if (progress < 1) {
-        requestAnimationFrame(animate);
-      } else {
-        setDisplayCO2(targetCO2);
-        setIsUpdating(true);
-        setTimeout(() => setIsUpdating(false), 1000);
-      }
-    };
-
-    requestAnimationFrame(animate);
+    animateValue(displayCO2, calculateCO2(totalPoints), setDisplayCO2);
+    animateValue(displayElectricity, calculateElectricity(totalPoints), setDisplayElectricity);
+    animateValue(displayWater, calculateWater(totalPoints), setDisplayWater);
+    animateValue(displayWaste, calculateWaste(totalPoints), setDisplayWaste);
   }, [totalPoints]);
 
   const welcomeMessage = useMemo(() => {
     const name = profile?.fullName?.split(' ')[0] || profile?.username || 'Eco-Warrior';
-    const co2 = displayCO2.toFixed(1);
     const level = getCurrentLevel(totalPoints);
     
     return (
@@ -130,13 +126,16 @@ export default function Dashboard() {
         )}>
           <span className="font-bold">{level.emoji} {level.title}</span>
           <span className="opacity-30">|</span>
-          <span>{co2} kg CO2 saved</span>
+          <span>{formatCO2(displayCO2)} CO₂ saved</span>
         </p>
       </>
     );
   }, [profile, displayCO2, totalPoints, isUpdating]);
 
   const [communityCO2, setCommunityCO2] = useState<number>(0);
+  const [communityElectricity, setCommunityElectricity] = useState(0);
+  const [communityWater, setCommunityWater] = useState(0);
+  const [communityWaste, setCommunityWaste] = useState(0);
 
   const fetchData = async () => {
     if (!auth.currentUser) return;
@@ -172,9 +171,11 @@ export default function Dashboard() {
       }
 
       if (usersSnap) {
-        const totalPoints = usersSnap.docs.reduce((sum, doc) => sum + (doc.data().points || 0), 0);
-        // User requested: sum of points * 0.05
-        setCommunityCO2(totalPoints * 0.05);
+        const communityPoints = usersSnap.docs.reduce((sum, doc) => sum + (doc.data().points || 0), 0);
+        setCommunityCO2(calculateCO2(communityPoints));
+        setCommunityElectricity(calculateElectricity(communityPoints));
+        setCommunityWater(calculateWater(communityPoints));
+        setCommunityWaste(calculateWaste(communityPoints));
       }
 
       // Check for daily quiz attempt
@@ -356,6 +357,20 @@ export default function Dashboard() {
           </div>
         </div>
 
+        {/* Your Individual Impact */}
+        <section>
+          <h2 className="text-2xl mb-6 flex items-center gap-2">
+            <Leaf className="text-primary" />
+            Your Impact
+          </h2>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <ImpactCard icon="🌿" label="CO₂ Saved"        value={formatCO2(displayCO2)}                sublabel="kilograms"  color="green"  />
+            <ImpactCard icon="⚡" label="Electricity Saved" value={formatElectricity(displayElectricity)} sublabel="watt-hours" color="yellow" />
+            <ImpactCard icon="💧" label="Water Saved"       value={formatWater(displayWater)}             sublabel="litres"     color="blue"   />
+            <ImpactCard icon="🗑️" label="Waste Reduced"    value={formatWaste(displayWaste)}             sublabel="kilograms"  color="orange" />
+          </div>
+        </section>
+
         {/* Daily Challenges */}
         <section>
           <div className="flex items-center justify-between mb-6">
@@ -493,11 +508,26 @@ export default function Dashboard() {
             </h2>
             <div className="bg-primary text-white rounded-3xl p-8 card-shadow relative overflow-hidden">
               <div className="relative z-10">
-                <p className="text-primary-light font-bold uppercase tracking-widest text-xs mb-2">Global Impact</p>
-                <h3 className="text-4xl font-display mb-4">
-                  {communityCO2.toLocaleString(undefined, { minimumFractionDigits: 1, maximumFractionDigits: 1 })} Tons
-                </h3>
-                <p className="text-primary-light/80 text-sm leading-relaxed">Total CO2 offset by the EcoStep community this month. We're making a difference together!</p>
+                <p className="text-primary-light font-bold uppercase tracking-widest text-xs mb-4">Global Community Impact</p>
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <p className="text-xs text-white/60 uppercase tracking-wider mb-1">CO₂ Saved</p>
+                    <p className="text-xl font-display font-bold">{communityCO2.toLocaleString(undefined, { maximumFractionDigits: 1 })} kg</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-white/60 uppercase tracking-wider mb-1">Electricity</p>
+                    <p className="text-xl font-display font-bold">{(communityElectricity / 1000).toFixed(1)} kWh</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-white/60 uppercase tracking-wider mb-1">Water Saved</p>
+                    <p className="text-xl font-display font-bold">{communityWater.toLocaleString(undefined, { maximumFractionDigits: 0 })} L</p>
+                  </div>
+                  <div>
+                    <p className="text-xs text-white/60 uppercase tracking-wider mb-1">Waste Reduced</p>
+                    <p className="text-xl font-display font-bold">{communityWaste.toFixed(1)} kg</p>
+                  </div>
+                </div>
+                <p className="text-white/60 text-sm leading-relaxed">Together, the EcoStep community is making a real difference!</p>
               </div>
               <Leaf className="absolute -bottom-4 -right-4 text-white/10" size={120} />
             </div>

@@ -4,7 +4,7 @@ import { db } from "../firebase";
 import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { motion, AnimatePresence } from "motion/react";
-import { Calendar, MapPin, Users, ArrowRight, Star, Plus, Edit2, Trash2, CheckCircle2, Camera, Trophy as TrophyIcon } from "lucide-react";
+import { Calendar, MapPin, Users, ArrowRight, Star, Plus, Edit2, Trash2, CheckCircle2, Camera, Trophy as TrophyIcon, Loader2 } from "lucide-react";
 import { cn } from "../lib/utils";
 import { useAuth } from "../contexts/AuthContext";
 import EventModal from "../components/EventModal";
@@ -24,7 +24,7 @@ export default function Events() {
   const [eventToDelete, setEventToDelete] = useState<string | null>(null);
   
   const { isAdmin, user } = useAuth();
-  const { registrations, submissions, addRegistration, addSubmission, isUserRegistered } = useEventData();
+  const { registrations, submissions, loading: eventDataLoading, isUserRegistered } = useEventData();
 
   const fetchEvents = useCallback(async () => {
     try {
@@ -68,13 +68,11 @@ export default function Events() {
   };
 
   const handleRegistrationSuccess = (reg: Registration) => {
-    addRegistration(reg);
     setSelectedEventForReg(null);
     toast.success(`✅ You have successfully registered for ${reg.eventName}!`);
   };
 
   const handleSubmissionSuccess = (sub: Submission) => {
-    addSubmission(sub);
     setSelectedEventForProof(null);
     toast.success(`🎉 Proof submitted! You earned +${sub.points} points!`);
   };
@@ -122,7 +120,12 @@ export default function Events() {
           </div>
         </div>
 
-        {activeTab === 'events' ? (
+        {loading || eventDataLoading ? (
+          <div className="flex flex-col items-center justify-center py-20 gap-4">
+            <Loader2 className="animate-spin text-primary" size={40} />
+            <p className="text-text-secondary animate-pulse">Loading events and participants...</p>
+          </div>
+        ) : activeTab === 'events' ? (
           <>
             {/* Featured Event */}
             <div className="relative h-96 rounded-3xl overflow-hidden card-shadow group cursor-pointer">
@@ -168,7 +171,7 @@ export default function Events() {
                     event={event} 
                     isAdmin={isAdmin}
                     userEmail={user?.email || null}
-                    isRegistered={isUserRegistered(user?.email || '', event.id)}
+                    isRegistered={isUserRegistered(event.id)}
                     onEdit={() => handleEdit(event)}
                     onDelete={() => setEventToDelete(event.id)}
                     onRegister={() => setSelectedEventForReg(event)}
