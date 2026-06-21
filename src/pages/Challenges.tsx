@@ -47,13 +47,16 @@ export default function Challenges() {
 
   const fetchChallenges = async () => {
     try {
-      const snap = await getDocs(collection(db, "challenges")).catch(e => handleFirestoreError(e, OperationType.LIST, "challenges"));
+      const snap = await getDocs(collection(db, "challenges")).catch(e => {
+        handleFirestoreError(e, OperationType.LIST, "challenges");
+        return null;
+      });
       if (snap) {
         const data = snap.docs.map(d => d.data() as Challenge);
         setChallenges(data);
       }
-    } catch (error) {
-      console.error("Error fetching challenges:", error);
+    } catch (error: any) {
+      console.error("Error fetching challenges:", error?.message || "Unknown error");
     } finally {
       setLoading(false);
     }

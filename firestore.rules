@@ -106,17 +106,28 @@ service cloud.firestore {
     }
 
     function isValidEvent(data) {
-      return hasRequiredFields(['eventId', 'title', 'description', 'eventType', 'status', 'startDate', 'location']) &&
+      return hasRequiredFields(['eventId', 'title', 'description']) &&
              data.eventId is string && data.eventId.size() > 0 &&
-             data.title is string && data.title.size() > 0 && data.title.size() <= 100 &&
-             data.description is string && data.description.size() > 0 && data.description.size() <= 2000 &&
-             data.eventType in ['CLEANUP', 'WORKSHOP', 'MEETING', 'CAMPAIGN', 'OTHER', 'WALK', 'PLANTATION', 'VISIT', 'In-Person'] &&
-             data.status in ['UPCOMING', 'ONGOING', 'COMPLETED', 'CANCELLED'] &&
-             isValidDateString(data.startDate) &&
-             data.location is map &&
-             data.location.venueName is string && data.location.venueName.size() > 0 &&
+             data.title is string && data.title.size() > 0 &&
+             data.description is string &&
+             // Flexible fields to support both "type" and "eventType"
+             (
+               ('eventType' in data && data.eventType is string) || 
+               ('type' in data && data.type is string)
+             ) &&
+             // Flexible date fields
+             (
+               ('startDate' in data && isValidDateString(data.startDate)) || 
+               ('date' in data && isValidDateString(data.date))
+             ) &&
+             // Flexible location
+             (
+               ('location' in data && (data.location is string || data.location is map))
+             ) &&
+             (!('status' in data) || data.status in ['UPCOMING', 'ONGOING', 'COMPLETED', 'CANCELLED']) &&
              (!('endDate' in data) || data.endDate == "" || isValidDateString(data.endDate)) &&
-             (!('bonusPoints' in data) || data.bonusPoints is int || data.bonusPoints is number) &&
+             (!('bonusPoints' in data) || data.bonusPoints is int || data.bonusPoints is float || (data.bonusPoints == 0)) &&
+             (!('points' in data) || data.points is int || data.points is float || (data.points == 0)) &&
              (!('category' in data) || data.category is string) &&
              (!('shortDescription' in data) || data.shortDescription is string) &&
              (!('isActive' in data) || data.isActive is bool) &&

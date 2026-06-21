@@ -47,44 +47,87 @@ export const useEventData = () => {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    // 1. Listen for public participants
-    const unsubParticipants = onSnapshot(
-      collection(db, "event_participants_public"),
-      (snap) => {
-        const regs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Registration));
-        setRegistrations(regs);
-      },
-      (error) => handleFirestoreError(error, OperationType.LIST, "event_participants_public")
-    );
+    let unsubParticipants = () => {};
+    let unsubCompletions = () => {};
+    let unsubQuiz = () => {};
 
-    // 2. Listen for completions (publicly visible)
-    const unsubCompletions = onSnapshot(
-      collection(db, "completions"),
-      (snap) => {
-        const subs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Submission));
-        setSubmissions(subs);
-      },
-      (error) => handleFirestoreError(error, OperationType.LIST, "completions")
-    );
+    const unsubAuth = auth.onAuthStateChanged((user) => {
+      // Unsubscribe any existing listeners first
+      unsubParticipants();
+      unsubCompletions();
+      unsubQuiz();
 
-    // 3. Quiz scores (if needed, though quiz_attempts is used elsewhere)
-    const unsubQuiz = onSnapshot(
-      collection(db, "quiz_attempts"),
-      (snap) => {
-        const scores = snap.docs.map(doc => ({ 
-          id: doc.id, 
-          userEmail: doc.data().userId, // Note: using userId as email placeholder if needed
-          score: doc.data().score,
-          timestamp: doc.data().submittedAt
-        } as QuizScore));
-        setQuizScores(scores);
-      },
-      (error) => handleFirestoreError(error, OperationType.LIST, "quiz_attempts")
-    );
+      if (!user) {
+        setRegistrations([]);
+        setSubmissions([]);
+        setQuizScores([]);
+        setLoading(false);
+        return;
+      }
 
-    setLoading(false);
+      setLoading(true);
+
+      // 1. Listen for public participants
+      unsubParticipants = onSnapshot(
+        collection(db, "event_participants_public"),
+        (snap) => {
+          const regs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Registration));
+          setRegistrations(regs);
+          setLoading(false);
+        },
+        (error) => {
+          if (auth.currentUser) {
+            handleFirestoreError(error, OperationType.LIST, "event_participants_public");
+          }
+          setLoading(false);
+        }
+      );
+
+      // 2. Listen for completions (publicly visible)
+      unsubCompletions = onSnapshot(
+        collection(db, "completions"),
+        (snap) => {
+          const subs = snap.docs.map(doc => ({ id: doc.id, ...doc.data() } as Submission));
+          setSubmissions(subs);
+          setLoading(false);
+        },
+        (error) => {
+          if (auth.currentUser) {
+            handleFirestoreError(error, OperationType.LIST, "completions");
+          }
+          setLoading(false);
+        }
+      );
+
+      // 3. Quiz scores - restrict reader query to current user isOwner rules, unless they are admin
+      const isAdminUser = user.email === "arcadeabhi6@gmail.com";
+      const qQuiz = isAdminUser
+        ? collection(db, "quiz_attempts")
+        : query(collection(db, "quiz_attempts"), where("userId", "==", user.uid));
+
+      unsubQuiz = onSnapshot(
+        qQuiz,
+        (snap) => {
+          const scores = snap.docs.map(doc => ({ 
+            id: doc.id, 
+            userEmail: doc.data().userId, // Using userId as email placeholder
+            score: doc.data().score,
+            timestamp: doc.data().submittedAt
+          } as QuizScore));
+          setQuizScores(scores);
+          setLoading(false);
+        },
+        (error) => {
+          if (auth.currentUser) {
+            handleFirestoreError(error, OperationType.LIST, "quiz_attempts");
+          }
+          setLoading(false);
+        }
+      );
+    });
 
     return () => {
+      unsubAuth();
       unsubParticipants();
       unsubCompletions();
       unsubQuiz();

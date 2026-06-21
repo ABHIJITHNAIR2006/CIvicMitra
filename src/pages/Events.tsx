@@ -30,12 +30,15 @@ export default function Events() {
   const fetchEvents = useCallback(async () => {
     try {
       const q = query(collection(db, "events"), orderBy("startDate", "asc"));
-      const snap = await getDocs(q).catch(e => handleFirestoreError(e, OperationType.LIST, "events"));
+      const snap = await getDocs(q).catch(e => {
+        handleFirestoreError(e, OperationType.LIST, "events");
+        return null;
+      });
       if (snap) {
         setEvents(snap.docs.map(d => ({ id: d.id, ...d.data() })));
       }
-    } catch (error) {
-      console.error("Error fetching events:", error);
+    } catch (error: any) {
+      console.error("Error fetching events:", error?.message || "Unknown error");
     } finally {
       setLoading(false);
     }
@@ -48,75 +51,87 @@ export default function Events() {
         {
           eventId: "city-forest-walk",
           title: "City Forest Walk",
-          description: "Join a guided nature walk through an urban forest with a trained naturalist who will explain local flora, fauna, and the importance of urban green lungs. Participants will document species spotted and learn how to identify native plants.",
+          description: "Join a guided nature walk through an urban forest with a trained naturalist who will explain local flora, fauna, and the importance of urban green lungs.",
           shortDescription: "Guided nature walk through an urban forest with a naturalist.",
           eventType: "WALK",
+          type: "WALK",
           category: "NATURE",
           bonusPoints: 30,
+          points: 30,
           iconEmoji: "🌳",
           bannerImageUrl: "https://picsum.photos/seed/forestwalk/800/400",
           location: { venueName: "City Forest / Nearest Urban Park", address: "" },
           startDate: "2025-05-10T07:00:00Z",
+          date: "2025-05-10",
           endDate: "2025-05-10T09:30:00Z",
           maxParticipants: 40,
           registrationDeadline: "2025-05-08",
           isActive: true,
           isFeatured: true,
-          proofInstructions: "Upload a photo of yourself at the forest walk with at least one plant or bird documented.",
+          proofInstructions: "Upload a photo of yourself at the forest walk.",
           status: "UPCOMING"
         },
         {
           eventId: "beach-cleanup-drive",
           title: "Beach / Lake Cleanup Drive",
-          description: "Join the community for an organized shoreline cleanup. Participants will collect, segregate into dry and wet waste, and log the total waste collected. Gloves and bags will be provided. Come prepared with good shoes and water.",
+          description: "Join the community for an organized shoreline cleanup. Participants will collect, segregate into dry and wet waste, and log the total waste collected.",
           shortDescription: "Community shoreline cleanup — collect, segregate, and log waste.",
           eventType: "CLEANUP",
+          type: "CLEANUP",
           category: "NATURE",
           bonusPoints: 40,
+          points: 40,
           iconEmoji: "🏖️",
           bannerImageUrl: "https://picsum.photos/seed/beachclean/800/400",
           location: { venueName: "Nearest Beach / Lake Front", address: "" },
           startDate: "2025-05-17T06:30:00Z",
+          date: "2025-05-17",
           endDate: "2025-05-17T09:00:00Z",
           maxParticipants: 100,
           registrationDeadline: "2025-05-15",
           isActive: true,
           isFeatured: true,
-          proofInstructions: "Upload a photo of the waste bags you filled at the cleanup site.",
+          proofInstructions: "Upload a photo of the waste bags you filled.",
           status: "UPCOMING"
         },
         {
           eventId: "tree-plantation-marathon",
           title: "Tree Plantation Marathon",
-          description: "Be part of a city-wide tree planting initiative where teams plant 100+ native trees across multiple locations. Each registered participant is expected to plant a minimum of 3 saplings. Saplings, soil, and tools will be provided.",
-          shortDescription: "Plant 100+ trees across the city in teams — minimum 3 per person.",
+          description: "Be part of a city-wide tree planting initiative where teams plant 100+ native trees across multiple locations.",
+          shortDescription: "Plant 100+ trees across the city in teams.",
           eventType: "PLANTATION",
+          type: "PLANTATION",
           category: "NATURE",
           bonusPoints: 50,
+          points: 50,
           iconEmoji: "🌱",
           bannerImageUrl: "https://picsum.photos/seed/plantation/800/400",
           location: { venueName: "Multiple City Locations", address: "" },
           startDate: "2025-06-05T08:00:00Z",
+          date: "2025-06-05",
           endDate: "2025-06-05T12:00:00Z",
           maxParticipants: 200,
           registrationDeadline: "2025-06-02",
           isActive: true,
           isFeatured: true,
-          proofInstructions: "Upload a photo of you planting your sapling with the location visible.",
+          proofInstructions: "Upload a photo of you planting your sapling.",
           status: "UPCOMING"
         },
         {
           eventId: "butterfly-garden-visit",
           title: "Butterfly Garden Visit",
-          description: "Visit a local butterfly garden or botanical garden with fellow eco-citizens. A guide will help you identify native butterfly species, host plants, and the role of pollinators in local ecosystems. Document as many species as you can.",
+          description: "Visit a local butterfly garden or botanical garden with fellow eco-citizens. A guide will help you identify native butterfly species and host plants.",
           shortDescription: "Visit a butterfly garden and document species spotted.",
           eventType: "VISIT",
+          type: "VISIT",
           category: "NATURE",
           bonusPoints: 25,
+          points: 25,
           iconEmoji: "🦋",
           bannerImageUrl: "https://picsum.photos/seed/butterfly/800/400",
           location: { venueName: "Local Botanical Garden", address: "" },
           startDate: "2025-05-24T09:00:00Z",
+          date: "2025-05-24",
           endDate: "2025-05-24T11:00:00Z",
           maxParticipants: 30,
           registrationDeadline: "2025-05-22",
@@ -128,41 +143,47 @@ export default function Events() {
         {
           eventId: "river-rejuvenation-walk",
           title: "River Rejuvenation Walk",
-          description: "Walk along a local river stretch with a team of civic volunteers. You will document pollution points such as sewage outfalls, illegal dumping, and encroachments, and submit a structured pollution report to the municipality.",
+          description: "Walk along a local river stretch with volunteers. Document pollution points such as sewage outfalls and illegal dumping.",
           shortDescription: "Walk a river stretch, document pollution, and file a report.",
           eventType: "WALK",
+          type: "WALK",
           category: "NATURE",
           bonusPoints: 35,
+          points: 35,
           iconEmoji: "🌊",
           bannerImageUrl: "https://picsum.photos/seed/riverwalk/800/400",
           location: { venueName: "Local River Stretch", address: "" },
           startDate: "2025-06-14T07:00:00Z",
+          date: "2025-06-14",
           endDate: "2025-06-14T10:00:00Z",
           maxParticipants: 50,
           registrationDeadline: "2025-06-12",
           isActive: true,
           isFeatured: false,
-          proofInstructions: "Upload a screenshot of your submitted pollution report or photo of documentation.",
+          proofInstructions: "Upload a screenshot of your report or photo of documentation.",
           status: "UPCOMING"
         },
         {
           eventId: "seed-ball-workshop",
           title: "Seed Ball Workshop",
-          description: "Learn the ancient Japanese technique of making seed balls using native wildflower and grass seeds mixed with clay and compost. After the workshop, participants will scatter seed balls in barren and degraded land around the city.",
+          description: "Learn the ancient technique of making seed balls using native seeds. Scatter seed balls in barren land around the city.",
           shortDescription: "Make seed balls and scatter them in barren city areas.",
           eventType: "WORKSHOP",
+          type: "WORKSHOP",
           category: "NATURE",
           bonusPoints: 30,
+          points: 30,
           iconEmoji: "🌼",
           bannerImageUrl: "https://picsum.photos/seed/seedball/800/400",
           location: { venueName: "Community Centre", address: "" },
           startDate: "2025-05-31T10:00:00Z",
+          date: "2025-05-31",
           endDate: "2025-05-31T13:00:00Z",
           maxParticipants: 35,
           registrationDeadline: "2025-05-29",
           isActive: true,
           isFeatured: false,
-          proofInstructions: "Upload a photo of the seed balls you made and where you scattered them.",
+          proofInstructions: "Upload a photo of the seed balls you made.",
           status: "UPCOMING"
         },
       ];
@@ -179,8 +200,8 @@ export default function Events() {
       await batch.commit();
       toast.success("Events updated successfully!");
       fetchEvents();
-    } catch (error) {
-      console.error("Error seeding events:", error);
+    } catch (error: any) {
+      console.error("Error seeding events:", error?.message || "Unknown error");
       toast.error("Failed to update events");
     } finally {
       setSeeding(false);
@@ -198,11 +219,14 @@ export default function Events() {
 
   const handleDelete = async (eventId: string) => {
     try {
-      await deleteDoc(doc(db, "events", eventId)).catch(e => handleFirestoreError(e, OperationType.DELETE, `events/${eventId}`));
+      await deleteDoc(doc(db, "events", eventId)).catch(e => {
+        handleFirestoreError(e, OperationType.DELETE, `events/${eventId}`);
+        return null;
+      });
       toast.success("Event deleted successfully!");
       fetchEvents();
-    } catch (error) {
-      console.error("Error deleting event:", error);
+    } catch (error: any) {
+      console.error("Error deleting event:", error?.message || "Unknown error");
       toast.error("Failed to delete event");
     } finally {
       setEventToDelete(null);

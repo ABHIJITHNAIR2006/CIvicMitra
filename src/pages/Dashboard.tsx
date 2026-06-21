@@ -1,6 +1,7 @@
 import { useEffect, useState, useMemo, memo } from "react";
 import { collection, query, getDocs, limit, orderBy, where, doc, getDoc, setDoc, writeBatch, onSnapshot } from "firebase/firestore";
 import { db, auth } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
 import { Category, Difficulty, Challenge, UserProfile, Completion, VerificationStatus, Role } from "../types";
 import { toast } from "react-hot-toast";
 import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
@@ -194,8 +195,8 @@ export default function Dashboard() {
       if (quizSnap && quizSnap.empty) {
         setIsQuizOpen(true);
       }
-    } catch (error) {
-      console.error("Error fetching dashboard data:", error);
+    } catch (error: any) {
+      console.error("Error fetching dashboard data:", error?.message || "Unknown error");
       toast.error("Some data failed to load. Please refresh.");
     } finally {
       setLoading(false);
@@ -356,28 +357,44 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    if (!auth.currentUser) return;
+    let unsubscribeProfile = () => {};
 
-    // Immediate Admin Check based on email
-    if (auth.currentUser.email === "arcadeabhi6@gmail.com") {
-      setIsAdmin(true);
-    }
+    const unsubAuth = onAuthStateChanged(auth, (user) => {
+      unsubscribeProfile();
 
-    // Real-time user profile listener
-    const unsubscribeProfile = onSnapshot(doc(db, "users", auth.currentUser.uid), (snapshot) => {
-      if (snapshot.exists()) {
-        const userData = snapshot.data() as UserProfile;
-        setProfile(userData);
-        if (userData.role === Role.ADMIN) {
-          setIsAdmin(true);
-        }
+      if (!user) {
+        setProfile(null);
+        setIsAdmin(false);
+        return;
       }
-    }, (e) => {
-      console.error("User profile listener failed:", e);
+
+      // Immediate Admin Check based on email
+      if (user.email === "arcadeabhi6@gmail.com") {
+        setIsAdmin(true);
+      }
+
+      // Real-time user profile listener
+      unsubscribeProfile = onSnapshot(doc(db, "users", user.uid), (snapshot) => {
+        if (snapshot.exists()) {
+          const userData = snapshot.data() as UserProfile;
+          setProfile(userData);
+          if (userData.role === Role.ADMIN) {
+            setIsAdmin(true);
+          }
+        }
+      }, (e) => {
+        if (auth.currentUser) {
+          console.error("User profile listener failed:", e);
+        }
+      });
+
+      fetchData();
     });
 
-    fetchData();
-    return () => unsubscribeProfile();
+    return () => {
+      unsubAuth();
+      unsubscribeProfile();
+    };
   }, []);
 
   if (loading) {
