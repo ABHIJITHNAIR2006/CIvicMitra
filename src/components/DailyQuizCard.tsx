@@ -5,7 +5,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { motion } from "motion/react";
 import { Brain, CheckCircle2, Trophy, ArrowRight, Loader2 } from "lucide-react";
 import QuizModal from "./QuizModal";
-import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
+import { handleFirestoreError, OperationType } from "../lib/firestore-guard";
 
 export default function DailyQuizCard() {
   const { user } = useAuth();

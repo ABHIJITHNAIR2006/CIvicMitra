@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { collection, query, where, onSnapshot, getDocs } from 'firebase/firestore';
 import { db, auth } from '../firebase';
-import { handleFirestoreError, OperationType } from './firestore-error-handler';
+import { handleFirestoreError, OperationType } from './firestore-guard';
 
 export interface Registration {
   id: string;

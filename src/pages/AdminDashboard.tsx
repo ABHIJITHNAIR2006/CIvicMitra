@@ -3,7 +3,7 @@ import DashboardLayout from "../layouts/DashboardLayout";
 import { collection, query, getDocs, where, doc, updateDoc, getDoc, increment, writeBatch } from "firebase/firestore";
 import { onAuthStateChanged } from "firebase/auth";
 import { db, auth } from "../firebase";
-import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
+import { handleFirestoreError, OperationType } from "../lib/firestore-guard";
 import { UserProfile, Completion, VerificationStatus, Role, Challenge, Category, Difficulty } from "../types";
 import { motion } from "motion/react";
 import { Users, Zap, AlertCircle, CheckCircle2, XCircle, ShieldCheck, Eye, Database, Plus, Brain, Trophy } from "lucide-react";

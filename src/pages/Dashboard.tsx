@@ -4,7 +4,7 @@ import { db, auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
 import { Category, Difficulty, Challenge, UserProfile, Completion, VerificationStatus, Role } from "../types";
 import { toast } from "react-hot-toast";
-import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
+import { handleFirestoreError, OperationType } from "../lib/firestore-guard";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { motion, AnimatePresence } from "motion/react";
 import { Trophy, Zap, Target, ArrowRight, Leaf, Users, Calendar, Database, CheckCircle2, Clock, Star, Award } from "lucide-react";
@@ -151,8 +151,7 @@ export default function Dashboard() {
         getDocs(query(
           collection(db, "completions"), 
           where("userId", "==", auth.currentUser.uid),
-          orderBy("submittedAt", "desc"),
-          limit(5)
+          limit(20)
         )).catch(e => {
           console.error("Activity fetch failed:", e);
           return null;
@@ -168,7 +167,11 @@ export default function Dashboard() {
       }
 
       if (activitySnap) {
-        setRecentActivity(activitySnap.docs.map(d => ({ id: d.id, ...d.data() } as Completion)));
+        const sortedComps = activitySnap.docs
+          .map(d => ({ id: d.id, ...d.data() } as Completion))
+          .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime())
+          .slice(0, 5);
+        setRecentActivity(sortedComps);
       }
 
       if (usersSnap) {

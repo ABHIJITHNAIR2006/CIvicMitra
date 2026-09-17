@@ -1,7 +1,7 @@
 import { useEffect, useState, useCallback, memo, useRef } from "react";
 import { collection, query, orderBy, limit, onSnapshot, doc, getDoc, addDoc, updateDoc, increment, setDoc, deleteDoc } from "firebase/firestore";
 import { db, auth } from "../firebase";
-import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
+import { handleFirestoreError, OperationType } from "../lib/firestore-guard";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { Completion } from "../types";
 import { motion, AnimatePresence } from "motion/react";

@@ -86,7 +86,7 @@ export interface Completion {
   userId: string;
   challengeId: string;
   proofUrl: string;
-  proofType: "IMAGE" | "VIDEO";
+  proofType: "IMAGE" | "VIDEO" | "SCREEN_SCAN";
   caption?: string;
   aiVerificationStatus: VerificationStatus;
   aiVerificationScore: number;
@@ -96,6 +96,20 @@ export interface Completion {
   verifiedAt?: string;
   likesCount?: number;
   commentsCount?: number;
+}
+
+export interface ScreenScan {
+  id: string;
+  userId: string;
+  imageHash: string;
+  matchedChallengeId: string | null;
+  matchedChallengeTitle: string | null;
+  status: "VERIFIED" | "REJECTED" | "DUPLICATE";
+  confidence: number;
+  pointsAwarded: number;
+  reason: string;
+  scannedAt: string;
+  sourceUrl?: string;
 }
 
 export interface Badge {

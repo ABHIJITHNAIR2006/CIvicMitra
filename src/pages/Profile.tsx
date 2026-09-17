@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { doc, getDoc, collection, query, where, getDocs, orderBy } from "firebase/firestore";
 import { db, auth } from "../firebase";
-import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
+import { handleFirestoreError, OperationType } from "../lib/firestore-guard";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { UserProfile, Completion } from "../types";
 import { motion, AnimatePresence } from "motion/react";
@@ -54,10 +54,13 @@ export default function Profile() {
         if (userDoc && userDoc.exists()) setProfile(userDoc.data() as UserProfile);
         else if (userDoc && !userDoc.exists()) console.warn("User profile document not found");
 
-        const compQuery = query(collection(db, "completions"), where("userId", "==", auth.currentUser.uid), orderBy("submittedAt", "desc"));
+        const compQuery = query(collection(db, "completions"), where("userId", "==", auth.currentUser.uid));
         const compSnap = await getDocs(compQuery).catch(e => handleFirestoreError(e, OperationType.LIST, "completions"));
         if (compSnap) {
-          setCompletions(compSnap.docs.map(d => ({ id: d.id, ...d.data() } as Completion)));
+          const sorted = compSnap.docs
+            .map(d => ({ id: d.id, ...d.data() } as Completion))
+            .sort((a, b) => new Date(b.submittedAt).getTime() - new Date(a.submittedAt).getTime());
+          setCompletions(sorted);
         }
 
       } catch (error) {

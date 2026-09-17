@@ -25,7 +25,7 @@ export interface FirestoreErrorInfo {
       email: string | null;
       photoUrl: string | null;
     }[];
-  }
+  };
 }
 
 // Helper to strip non-serializable or complex properties from an object
@@ -41,8 +41,6 @@ function cleanObject(obj: any): any {
       clean[key] = val.toISOString();
       continue;
     }
-    // Handle potential circular refs or huge objects by depth limiting if necessary
-    // For now, just ensure we don't pick up class instances that might have circularity
     if (val !== null && typeof val === 'object') {
       if (val.constructor !== Object && val.constructor !== Array) {
         clean[key] = `[${val.constructor.name}]`;
@@ -104,7 +102,7 @@ export function handleFirestoreError(error: unknown, operationType: OperationTyp
     },
     operationType,
     path
-  }
+  };
 
   // Ensure errInfo is serializable
   try {

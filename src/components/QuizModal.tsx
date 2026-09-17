@@ -6,7 +6,7 @@ import { useAuth } from "../contexts/AuthContext";
 import { motion, AnimatePresence } from "motion/react";
 import { X, CheckCircle2, AlertCircle, Trophy, ArrowRight, Loader2 } from "lucide-react";
 import { toast } from "react-hot-toast";
-import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
+import { handleFirestoreError, OperationType } from "../lib/firestore-guard";
 
 import { updateStats } from "../lib/badge-utils";
 

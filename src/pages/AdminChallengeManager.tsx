@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { collection, getDocs, addDoc, deleteDoc, doc, updateDoc, getDoc, setDoc } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { Challenge, Category, Difficulty, Role } from "../types";
-import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
+import { handleFirestoreError, OperationType } from "../lib/firestore-guard";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { Plus, Trash2, Edit2, Save, X, RefreshCw, ShieldCheck, Trophy, Image as ImageIcon, HelpCircle } from "lucide-react";
 import { toast } from "react-hot-toast";

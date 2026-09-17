@@ -4,7 +4,7 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { doc, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
 import { signInWithGoogle } from "../lib/auth-utils";
-import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
+import { handleFirestoreError, OperationType } from "../lib/firestore-guard";
 import { syncUserToAllUsers, setCurrentSocialUser } from "../lib/social-utils";
 import { toast } from "react-hot-toast";
 import { motion } from "motion/react";

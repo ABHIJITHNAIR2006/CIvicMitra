@@ -4,7 +4,7 @@ import { X, Calendar, MapPin, Star, Info, Image as ImageIcon } from "lucide-reac
 import { db } from "../firebase";
 import { doc, setDoc, addDoc, collection } from "firebase/firestore";
 import { toast } from "react-hot-toast";
-import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
+import { handleFirestoreError, OperationType } from "../lib/firestore-guard";
 
 import { useAuth } from "../contexts/AuthContext";
 import { Role } from "../types";

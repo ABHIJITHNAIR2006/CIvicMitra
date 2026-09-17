@@ -24,7 +24,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { db, auth } from '../firebase';
 import { collection, addDoc, updateDoc, doc, increment } from 'firebase/firestore';
 import { toast } from 'react-hot-toast';
-import { handleFirestoreError, OperationType } from '../lib/firestore-error-handler';
+import { handleFirestoreError, OperationType } from '../lib/firestore-guard';
 
 // --- Registration Modal ---
 

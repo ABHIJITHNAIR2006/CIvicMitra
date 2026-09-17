@@ -2,7 +2,7 @@ import { useState } from "react";
 import { collection, doc, updateDoc, increment, addDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { db, auth, storage } from "../firebase";
-import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
+import { handleFirestoreError, OperationType } from "../lib/firestore-guard";
 import { Challenge } from "../types";
 import { motion } from "motion/react";
 import { X, Upload, CheckCircle2, AlertCircle } from "lucide-react";

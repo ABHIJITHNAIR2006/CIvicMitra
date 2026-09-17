@@ -2,7 +2,7 @@ import { useEffect, useState, useMemo } from "react";
 import { collection, getDocs, writeBatch, doc, getDoc } from "firebase/firestore";
 import { db, auth } from "../firebase";
 import { onAuthStateChanged } from "firebase/auth";
-import { handleFirestoreError, OperationType } from "../lib/firestore-error-handler";
+import { handleFirestoreError, OperationType } from "../lib/firestore-guard";
 import DashboardLayout from "../layouts/DashboardLayout";
 import { Challenge, Category, Difficulty, Role } from "../types";
 import { AnimatePresence } from "motion/react";

@@ -27,6 +27,7 @@ import { Role } from "../types";
 import { useEventData } from "../lib/event-registration-utils";
 import { getCurrentLevel } from "../lib/level-utils";
 import { getUserBadges } from "../lib/badge-utils";
+import AIScreenScanner from "../components/AIScreenScanner";
 
 const baseNavItems = [
   { icon: Home, label: "Dashboard", path: "/dashboard" },
@@ -281,6 +282,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       <main className="flex-1 lg:p-8 p-4 pt-20 lg:pt-8 max-w-7xl mx-auto w-full">
         {children}
       </main>
+
+      {/* Floating Ambient AI Screen Scanner & Quick Nav Widget */}
+      <AIScreenScanner />
     </div>
   );
 }

@@ -1,7 +1,7 @@
 import { GoogleAuthProvider, signInWithPopup, User } from "firebase/auth";
 import { doc, getDoc, setDoc } from "firebase/firestore";
 import { auth, db } from "../firebase";
-import { handleFirestoreError, OperationType } from "./firestore-error-handler";
+import { handleFirestoreError, OperationType } from "./firestore-guard";
 import { Role } from "../types";
 
 export const signInWithGoogle = async () => {
